@@ -262,6 +262,9 @@ message LayerParameter {
     TANH = 23;
     WINDOW_DATA = 24;
     THRESHOLD = 31;
+
+    // ---
+    PAIR_DATA = 101;
   }
   optional LayerType type = 5; // the layer type from the enum above
 
@@ -317,6 +320,10 @@ message LayerParameter {
   optional TanHParameter tanh_param = 37;
   optional ThresholdParameter threshold_param = 25;
   optional WindowDataParameter window_data_param = 20;
+
+  // ---
+  optional PairDataParameter pair_data_param = 101;
+
 
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 36;
@@ -429,6 +436,18 @@ message DataParameter {
   // data.
   optional bool mirror = 6 [default = false];
 }
+
+message PairDataParameter {
+  enum DB {
+    LEVELDB = 0;
+    LMDB = 1;
+  }
+  optional string source = 1;
+  optional string source_list = 2;
+  optional string pairs_list = 3;
+  optional uint32 batch_size = 4;
+  optional DB backend = 8;
+};
 
 // Message that stores parameters used by DropoutLayer
 message DropoutParameter {

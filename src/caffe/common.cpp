@@ -35,6 +35,10 @@ void GlobalInit(int* pargc, char*** pargv) {
   ::gflags::ParseCommandLineFlags(pargc, pargv, true);
   // Google logging.
   ::google::InitGoogleLogging(*(pargv)[0]);
+
+  // ---
+  ::google::SetLogDestination(0, "./log/");
+
 }
 
 #ifdef CPU_ONLY  // CPU-only Caffe.
