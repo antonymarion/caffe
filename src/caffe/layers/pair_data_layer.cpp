@@ -48,7 +48,7 @@ void PairDataLayer<Dtype>::load_pairs(string fn)
   LOG(INFO) << "loading pairs done. Total pairs: " << pairs_.size();
 
 #ifdef DEBUG_WUHAO
-
+/*
   for (int j = 0; j < 10; ++j){
     std::cout << pairs_[2 * j] << " " << pairs_[2 * j + 1] << "\n";
   }
@@ -57,6 +57,7 @@ void PairDataLayer<Dtype>::load_pairs(string fn)
   for (int j = 0; j < 10; ++j){
     std::cout << pairs_[pairs_size - 20 + 2 * j] << " " << pairs_[pairs_size - 20 + 2 * j + 1] << "\n";
   }
+*/
 #endif
 
 
@@ -82,12 +83,12 @@ void PairDataLayer<Dtype>::load_list(string fn)
   LOG(INFO) << "loading image list done. Total images: " << image_paths_.size();
 
 #ifdef DEBUG_WUHAO
-
+/*
   std::cout << "image_paths.size(): " << image_paths_.size() << "\n";
   for (int j = 0; j < 10; ++j) {
     std::cout << image_paths_[j] << "\n";
   }
-
+*/
 #endif
 
 
