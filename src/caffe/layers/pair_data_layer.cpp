@@ -45,7 +45,7 @@ void PairDataLayer<Dtype>::load_pairs(string fn)
     pairs_.push_back(idx2);
   }
 
-  LOG(INFO) << "loading pairs done. Total pairs: " << pairs_.size();
+  LOG(INFO) << "loading pairs done. Total pairs: " << pairs_.size() / 2;
 
 #ifdef DEBUG_WUHAO
 /*
@@ -247,13 +247,20 @@ void PairDataLayer<Dtype>::get_cur_key(int pair_channel, string& keystr){
   const int kMaxKeyLength = 256;
   char key_cstr[kMaxKeyLength];
 
-
+  
   CHECK((pair_channel == 1) || (pair_channel == 0));
   if (pair_channel == 0) {
     idx = pairs_[2 * cur_pair_];
   } else if (pair_channel == 1) {
     idx = pairs_[2 * cur_pair_ + 1];
-  } 
+  }
+
+
+#if 0
+  std::cout << "idx: " << idx << "image_paths_[idx]: " << image_paths_[idx] << std::endl;
+#endif
+
+  CHECK(idx < image_paths_.size());
   snprintf(key_cstr, kMaxKeyLength, "%08d_%s", idx,
       image_paths_[idx].c_str());
   keystr.clear();
@@ -326,7 +333,7 @@ void PairDataLayer<Dtype>::InternalThreadEntry() {
     // go to the next iter
 
     cur_pair_++;
-    if (cur_pair_ > pairs_.size() - 1) {
+    if (cur_pair_ > pairs_.size() / 2 - 1) {
       DLOG(INFO) << "Restarting data prefetching from start.";
       cur_pair_ = 0;
     }
