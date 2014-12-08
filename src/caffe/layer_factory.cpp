@@ -254,7 +254,11 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   // ---
   case LayerParameter_LayerType_PAIR_DATA:
     return new PairDataLayer<Dtype>(param);
-  
+  case LayerParameter_LayerType_VERIFICATION_LOSS:
+    return new VerificationLossLayer<Dtype>(param);
+  case LayerParameter_LayerType_VERIFICATION_ACCURACY:
+    return new VerificationAccuracyLayer<Dtype>(param);  
+    
   case LayerParameter_LayerType_NONE:
     LOG(FATAL) << "Layer " << name << " has unspecified type.";
   default:

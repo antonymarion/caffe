@@ -487,6 +487,13 @@ class SliceLayer : public Layer<Dtype> {
   vector<int> slice_point_;
 };
 
+
+
+
+
+
+
+
 }  // namespace caffe
 
 #endif  // CAFFE_COMMON_LAYERS_HPP_
