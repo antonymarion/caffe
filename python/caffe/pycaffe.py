@@ -212,6 +212,10 @@ def _Net_set_mean(self, input_, mean, mode='elementwise'):
     mode: elementwise = use the whole mean (and check dimensions)
           channel = channel constant (e.g. mean pixel instead of mean image)
     """
+    if not hasattr(self, 'mean'):
+        self.mean = {}
+    if mean is None:
+        return
     if input_ not in self.inputs:
         raise Exception('Input not in {}'.format(self.inputs))
     in_shape = self.blobs[input_].data.shape
