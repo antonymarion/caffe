@@ -267,6 +267,7 @@ message LayerParameter {
     PAIR_DATA = 101;
     VERIFICATION_LOSS = 102;
     VERIFICATION_ACCURACY = 103;
+    GAUSSIAN_NOISE = 104;
   }
   optional LayerType type = 5; // the layer type from the enum above
 
@@ -326,6 +327,7 @@ message LayerParameter {
   // ---
   optional PairDataParameter pair_data_param = 101;
   optional VerificationParameter verification_param = 102;
+  optional GaussianNoiseParameter gaussian_noise_param = 104;
 
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 36;
@@ -456,6 +458,9 @@ message VerificationParameter {
   optional float m2 = 2;
 }
 
+message GaussianNoiseParameter {
+  optional float std = 1;
+}
 
 // Message that stores parameters used by DropoutLayer
 message DropoutParameter {

@@ -258,7 +258,10 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new VerificationLossLayer<Dtype>(param);
   case LayerParameter_LayerType_VERIFICATION_ACCURACY:
     return new VerificationAccuracyLayer<Dtype>(param);  
-    
+  case LayerParameter_LayerType_GAUSSIAN_NOISE:
+    return new GaussianNoiseLayer<Dtype>(param);
+
+
   case LayerParameter_LayerType_NONE:
     LOG(FATAL) << "Layer " << name << " has unspecified type.";
   default:
