@@ -126,11 +126,20 @@ int main(int argc, char** argv) {
   int data_size;
   bool data_size_initialized = false;
 
+  bool output_datum_size = true;
+
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     if (!ReadImageToDatum(root_folder + lines[line_id].first,
         lines[line_id].second, resize_height, resize_width, is_color, &datum)) {
       continue;
     }
+
+    if (output_datum_size) {
+      LOG(ERROR) << "datum size: " << datum.channels()
+          << ", " << datum.height() << ", " << datum.width();
+      output_datum_size = false;
+    }
+
     if (!data_size_initialized) {
       data_size = datum.channels() * datum.height() * datum.width();
       data_size_initialized = true;

@@ -260,6 +260,12 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new VerificationAccuracyLayer<Dtype>(param);  
   case LayerParameter_LayerType_GAUSSIAN_NOISE:
     return new GaussianNoiseLayer<Dtype>(param);
+  case LayerParameter_LayerType_DISTANCE:
+    return new DistanceLayer<Dtype>(param);
+  case LayerParameter_LayerType_DISTANCE_LOSS:
+    return new DistanceLossLayer<Dtype>(param);
+  case LayerParameter_LayerType_BINARY_LABEL:
+    return new BinaryLabelLayer<Dtype>(param);
 
 
   case LayerParameter_LayerType_NONE:

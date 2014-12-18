@@ -268,6 +268,9 @@ message LayerParameter {
     VERIFICATION_LOSS = 102;
     VERIFICATION_ACCURACY = 103;
     GAUSSIAN_NOISE = 104;
+    DISTANCE = 105;
+    DISTANCE_LOSS = 106;
+    BINARY_LABEL = 107;
   }
   optional LayerType type = 5; // the layer type from the enum above
 
@@ -328,6 +331,9 @@ message LayerParameter {
   optional PairDataParameter pair_data_param = 101;
   optional VerificationParameter verification_param = 102;
   optional GaussianNoiseParameter gaussian_noise_param = 104;
+  optional DistanceParameter distance_param  = 105;
+  optional DistanceLossParameter distance_loss_param  = 106;
+  optional BinaryLabelParameter binary_label_param = 107;
 
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 36;
@@ -461,6 +467,30 @@ message VerificationParameter {
 message GaussianNoiseParameter {
   optional float std = 1;
 }
+
+message DistanceParameter {
+  enum DistanceType {
+    COSINE = 1;
+    L2 = 2;
+  }
+  optional DistanceType type = 1;
+}
+
+message DistanceLossParameter {
+  enum LossType {
+    L2 = 1;
+    EXP = 2;
+    LOG = 3;
+  }
+  optional LossType loss_type = 1;
+  optional float m1 = 2;
+  optional float m2 = 3;
+}
+
+message BinaryLabelParameter {
+  optional float negative_target = 1 [default = 0];
+}
+
 
 // Message that stores parameters used by DropoutLayer
 message DropoutParameter {

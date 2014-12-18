@@ -66,7 +66,6 @@ void VerificationAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& b
     int label1 = static_cast<int>(label1_data[i]);
     int label2 = static_cast<int>(label2_data[i]);
     Dtype norm2 = caffe_cpu_dot(dim, diff_data + offset, diff_data + offset);
-    Dtype t = 0;
     Dtype norm = sqrt(norm2);
     
 

@@ -605,6 +605,8 @@ class ThresholdLayer : public NeuronLayer<Dtype> {
   Dtype threshold_;
 };
 
+
+
 }  // namespace caffe
 
 #endif  // CAFFE_NEURON_LAYERS_HPP_

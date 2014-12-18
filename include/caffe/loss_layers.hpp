@@ -843,6 +843,47 @@ class VerificationAccuracyLayer : public Layer<Dtype> {
 };
 
 
+template <typename Dtype>
+class DistanceLossLayer : public LossLayer<Dtype> {
+ public:
+  explicit DistanceLossLayer(const LayerParameter& param)
+      : LossLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);    
+  
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_VERIFICATION_LOSS;
+  }
+
+  virtual inline bool AllowForceBackward(const int bottom_index) const {
+    return true;
+  }
+
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int ExactNumBottomBlobs() const { return 3; }
+
+
+
+ protected:
+
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+/*  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+*/
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+/*  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+*/
+
+  Dtype M1_;
+  Dtype M2_;
+};
+
 
 }  // namespace caffe
 
