@@ -8,6 +8,9 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
+#define DEBUG_WUHAO 1
+#include <iostream>
+
 namespace caffe {
 
 template <typename Dtype>
@@ -19,6 +22,7 @@ void DropoutLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   DCHECK(threshold_ < 1.);
   scale_ = 1. / (1. - threshold_);
   uint_thres_ = static_cast<unsigned int>(UINT_MAX * threshold_);
+  own_mask_ = true;
 }
 
 template <typename Dtype>
@@ -39,13 +43,36 @@ void DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int count = bottom[0]->count();
   if (Caffe::phase() == Caffe::TRAIN) {
     // Create random numbers
-    caffe_rng_bernoulli(count, 1. - threshold_, mask);
+
+    if (own_mask_) {
+      caffe_rng_bernoulli(count, 1. - threshold_, mask);
+      #if 0 //DEBUG_WUHAO
+      std::cout << "layer " << this->layer_param_.name() << " , mask updated..." << std::endl;
+      #endif
+    }
+
+
+#if 0 //DEBUG_WUHAO
+  std::cout << "layer " << this->layer_param_.name();
+  std::cout << " own_mask_: " << own_mask_ << std::endl;
+  for (int i = 0; i < 100; ++i) {
+    std::cout << mask[i] << " ";
+  }
+  std::cout << std::endl;
+  std::string input_str;
+  std::cout << "pause...";
+  std::cin >> input_str;
+#endif
+
+
+
     for (int i = 0; i < count; ++i) {
       top_data[i] = bottom_data[i] * mask[i] * scale_;
     }
   } else {
     caffe_copy(bottom[0]->count(), bottom_data, top_data);
   }
+
 }
 
 template <typename Dtype>

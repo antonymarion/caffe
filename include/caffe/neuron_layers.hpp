@@ -172,6 +172,15 @@ class DropoutLayer : public NeuronLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  void ShareMask(const DropoutLayer& dropout_layer) {
+    CHECK_EQ(this->rand_vec_.num(), dropout_layer.rand_vec_.num());
+    CHECK_EQ(this->rand_vec_.channels(), dropout_layer.rand_vec_.channels());
+    CHECK_EQ(this->rand_vec_.height(), dropout_layer.rand_vec_.height());
+    CHECK_EQ(this->rand_vec_.width(), dropout_layer.rand_vec_.width());
+    rand_vec_.ShareData(dropout_layer.rand_vec_);
+  }
+  
+  void SetOwnMask(bool own) {own_mask_ = own;}
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_DROPOUT;
@@ -210,6 +219,7 @@ class DropoutLayer : public NeuronLayer<Dtype> {
   /// the scale for undropped inputs at train time @f$ 1 / (1 - p) @f$
   Dtype scale_;
   unsigned int uint_thres_;
+  bool own_mask_;
 };
 
 /**

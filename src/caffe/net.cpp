@@ -14,7 +14,11 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
+#include "caffe/neuron_layers.hpp"
+
 #include "caffe/test/test_caffe_main.hpp"
+
+
 
 namespace caffe {
 
@@ -150,6 +154,40 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         blob_need_backward_[top_id_vecs_[layer_id][top_id]] = true;
       }
     }
+
+    // handle dropout layer share_mask if needed
+    if (layer_param.type() == LayerParameter_LayerType_DROPOUT) {
+      std::string share_mask = layer_param.dropout_param().share_mask();
+      LOG(INFO) << " share_mask().size(): " << share_mask.size();
+
+      if (share_mask.size() > 0) {
+        LOG(INFO) << " share_mask with layer: " << share_mask;
+        int layer_k  = 0;
+        for (layer_k = 0; layer_k < layer_id; ++layer_k) {
+          if ((share_mask.compare(layer_names_[layer_k]) == 0) &&
+              (param.layers(layer_k).type() == LayerParameter_LayerType_DROPOUT)) {
+            DropoutLayer<Dtype>* this_layer_ptr = dynamic_cast<DropoutLayer<Dtype>*>(layers_[layer_id].get());
+            CHECK(this_layer_ptr);
+            DropoutLayer<Dtype>* dropout_layer_ptr = dynamic_cast<DropoutLayer<Dtype>*>(layers_[layer_k].get());
+            CHECK(dropout_layer_ptr);
+            this_layer_ptr->ShareMask(*dropout_layer_ptr);
+            this_layer_ptr->SetOwnMask(false);
+            LOG(INFO) << "found layer " << share_mask << ", at layer_k = " << layer_k;
+            break;
+          }
+        }
+        if (layer_k >= layer_id) {
+          LOG(FATAL) << " share_mask: " << share_mask << " layer not found, or it's not a DROPOUT layer";
+        }
+      }
+      /*
+      std::string input_str;
+      std::cout << "pause..." << std::endl;
+      std::cin >> input_str;
+      */
+    }
+
+
   }
   // Go through the net backwards to determine which blobs contribute to the
   // loss.  We can skip backward computation for blobs that don't contribute

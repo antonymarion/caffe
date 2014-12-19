@@ -8,6 +8,9 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
+#define DEBUG_WUHAO 1
+#include  <iostream>
+
 namespace caffe {
 
 
@@ -29,7 +32,23 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   if (Caffe::phase() == Caffe::TRAIN) {
     unsigned int* mask =
         static_cast<unsigned int*>(rand_vec_.mutable_gpu_data());
-    caffe_gpu_rng_uniform(count, mask);
+    if (own_mask_) {
+      caffe_gpu_rng_uniform(count, mask);
+    }
+
+    #if 0 //DEBUG_WUHAO
+      const unsigned int* mask_cpu = rand_vec_.cpu_data();
+      std::cout << "layer " << this->layer_param_.name();
+      std::cout << " own_mask_: " << own_mask_ << std::endl;
+      for (int i = 0; i < 100; ++i) {
+        std::cout << (Dtype)(mask_cpu[i])/UINT_MAX << " ";
+      }
+      std::cout << std::endl;
+      std::string input_str;
+      std::cout << "pause...";
+      std::cin >> input_str;
+    #endif
+
     // set thresholds
     // NOLINT_NEXT_LINE(whitespace/operators)
     DropoutForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
