@@ -29,7 +29,7 @@ using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
 using std::string;
 
-int _MAX_PATH = 1000;
+int _MAX_PATH = 10000;
 
 DEFINE_bool(gray, false,
     "When this option is on, treat images as grayscale ones");
@@ -39,121 +39,111 @@ DEFINE_string(backend, "lmdb", "The backend for storing the result");
 DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
 
-
+// get size of features
 static int get_file_size(const char *filename)
 {
-	int fsize;
-	FILE *fp;
+  int fsize;
+  FILE *fp;
 
-	fp = fopen(filename, "rb");
-	if(fp == NULL)
-		return 0;
-	fseek(fp, 0, SEEK_END);
-	fsize = ftell(fp);
-	fclose(fp);
+  fp = fopen(filename, "rb");
+  if(fp == NULL)
+    return 0;
+  fseek(fp, 0, SEEK_END);
+  fsize = ftell(fp);
+  fclose(fp);
 
-	return fsize;
+  return fsize;
 }
 
+// read features
 static unsigned char * read_file_buffer(const char *filename, int *size)
 {
-	int fsize;
-	FILE *fp;
-	unsigned char *pnchBuf = NULL;
+  int fsize;
+  FILE *fp;
+  unsigned char *pnchBuf = NULL;
 
-	*size = 0;
+  *size = 0;
 
-	fsize = get_file_size(filename);
-	if(fsize == 0)
-		return NULL;
+  fsize = get_file_size(filename);
+  if(fsize == 0)
+    return NULL;
 
-	if((fp = fopen(filename, "rb")) != NULL )
-	{
-		pnchBuf = (unsigned char *) malloc(fsize * sizeof(unsigned char));
-		fread(pnchBuf, fsize, 1, fp);
-		fclose(fp);
-	}
+  if((fp = fopen(filename, "rb")) != NULL )
+  {
+    pnchBuf = (unsigned char *) malloc(fsize * sizeof(unsigned char));
+    fread(pnchBuf, fsize, 1, fp);
+    fclose(fp);
+  }
 
-	*size = fsize;
+  *size = fsize;
 
-	return pnchBuf;
+  return pnchBuf;
 }
 
 int main(int argc, char** argv) {
-  
   ::google::InitGoogleLogging(argv[0]);
   ::google::SetLogDestination(0, argv[1]);
 
-  #ifndef GFLAGS_GFLAGS_H_
-    namespace gflags = google;
-  #endif
+#ifndef GFLAGS_GFLAGS_H_
+  namespace gflags = google;
+#endif
 
   gflags::SetUsageMessage("Convert a set of images to the leveldb/lmdb\n"
-    "format used as input for Caffe.\n"
-    "Usage:\n"
-    "    convert_imageset [FLAGS] log_path ROOTFOLDER/ LISTFILE DB_NAME RANDOM_SHUFFLE_DATA[0 or 1]\n"
-    "The ImageNet dataset for the training demo is at\n"
-    "    http://www.image-net.org/download-images\n");
+        "format used as input for Caffe.\n"
+        "Usage:\n"
+        "    convert_imageset [FLAGS] LOG_PATH ROOTFOLDER/ LISTFILE DB_NAME\n"
+        "The ImageNet dataset for the training demo is at\n"
+        "    http://www.image-net.org/download-images\n");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  if (argc <5 || argc >6) {
+  if (argc != 5) {
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/convert_imageset");
     return 1;
   }
-  
 
+  bool is_color = !FLAGS_gray;
   std::ifstream infile(argv[3]);
   std::vector<std::pair<string, int> > lines;
   string filename;
   int label;
-
   while (infile >> filename >> label) {
     lines.push_back(std::make_pair(filename, label));
   }
-  LOG(INFO) << "A total of " << lines.size() << " features.";
-
-
- if (argc == 6 && argv[5][0] == '1') {
+  if (FLAGS_shuffle) {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
     shuffle(lines.begin(), lines.end());
   }
-
-
-  // Load features
-  string root_folder(argv[2]);
-  //preload the features
-  char file_name[_MAX_PATH];	
-  string str_tmp;	
-  int i, file_size, fea_len;
-  float **features;	
-  features = (float **) malloc(lines.size() * sizeof(float *));	
-  LOG(INFO) << "Loading features...";	
-  for(i=0; i < lines.size(); i++)
-  {
-    //sprintf(file_name, "%s\\%s", root_folder, lines[i].first);
-    str_tmp = root_folder + lines[i].first;
-    strcpy(file_name, str_tmp.c_str());
-    features[i] = (float *) read_file_buffer(file_name, &file_size);
-    if(i % 10000 == 0)
-    {
-    	LOG(INFO) << "Loaded " << i << " features.";
-    }
-  }
-  fea_len = file_size / sizeof(float);
-  LOG(INFO) << "feature length: " << fea_len ;
-
-  // for(i=0; i < fea_len; i++)
-  // {
-  // 	// printf("%f ", features[0][i]);
-  // 	LOG(INFO) << features[1][i] <<" ";
-  // }
+  LOG(INFO) << "A total of " << lines.size() << " images.";
 
   const string& db_backend = FLAGS_backend;
   const char* db_path = argv[4];
 
   int resize_height = std::max<int>(0, FLAGS_resize_height);
   int resize_width = std::max<int>(0, FLAGS_resize_width);
+
+  // Preload features
+  string root_folder(argv[2]);
+  char file_name[_MAX_PATH];
+  string str_tmp;
+  int i, file_size, fea_len;
+  float **features;
+
+  features = (float **) malloc(lines.size() * sizeof(float *));
+  LOG(INFO) << "Loading features...";
+  for(i=0; i<lines.size(); i++)
+  {
+    str_tmp = root_folder + lines[i].first;
+    strcpy(file_name, str_tmp.c_str());
+    features[i] = (float *) read_file_buffer(file_name, &file_size);
+
+    if(i % 10000 == 0)
+    {
+      LOG(INFO) << "Loaded" << i << "features.";
+    }
+  }
+  fea_len = file_size / sizeof(float);
+  LOG(INFO) << "feature length: " << fea_len;
 
   // Open new db
   // lmdb
@@ -204,9 +194,17 @@ int main(int argc, char** argv) {
 
   bool output_datum_size = true;
 
-  for (int line_id = 0; line_id < lines.size(); ++line_id) 
-  {
+  for (int line_id = 0; line_id < lines.size(); ++line_id) {
+    // if (!ReadImageToDatum(root_folder + lines[line_id].first,
+    //     lines[line_id].second, resize_height, resize_width, is_color, &datum)) {
+    //   continue;
+    // }
 
+    // if (output_datum_size) {
+    //   LOG(ERROR) << "datum size: " << datum.channels()
+    //       << ", " << datum.height() << ", " << datum.width();
+    //   output_datum_size = false;
+    // }
     datum.set_channels(fea_len);
     datum.set_height(1);
     datum.set_width(1);
@@ -215,21 +213,19 @@ int main(int argc, char** argv) {
     datum.clear_data();
     datum.clear_float_data();
 
-    LOG(INFO)<< line_id<< lines[line_id].first <<"\n";
-
-    for(i=0; i < fea_len; i++)
+    for(int j = 0; j < fea_len; j++)
     {
-    	datum.add_float_data(features[line_id][i]);
+      datum.add_float_data(features[line_id][j]);
     }
 
-    if (!data_size_initialized)
-    {
-    	data_size = datum.channels() * datum.height() * datum.width();
-    	data_size_initialized = true;
+    if (!data_size_initialized) {
+      data_size = datum.channels() * datum.height() * datum.width();
+      data_size_initialized = true;
     } else {
-    	CHECK_EQ(datum.float_data_size(), data_size) << "Incorrect data field size " << datum.float_data_size(); 
+      const string& data = datum.data();
+      CHECK_EQ(data.size(), data_size) << "Incorrect data field size "
+          << data.size();
     }
-
     // sequential
     snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
         lines[line_id].first.c_str());
@@ -283,12 +279,12 @@ int main(int argc, char** argv) {
     }
     LOG(ERROR) << "Processed " << count << " files.";
   }
-  
+
   for(i=0; i < lines.size(); i++)
   {
-  	free(features[i]);
+    free(features[i]);
   }
-  	
+
   free(features);
 
   return 0;
