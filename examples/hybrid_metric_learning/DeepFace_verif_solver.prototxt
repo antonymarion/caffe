@@ -1,0 +1,21 @@
+net: "DeepFace_verif_train_test.prototxt"
+
+test_iter: 194
+test_interval: 500
+test_compute_loss: true
+
+base_lr: 0.01
+momentum: 0.9
+weight_decay: 0.0005
+lr_policy: "fixed"
+gamma: 0.000005
+power: 0.75
+
+display: 100
+max_iter: 80000
+snapshot: 5000
+snapshot_prefix: "DeepFace_verif"
+
+solver_mode: GPU
+
+debug_info: false

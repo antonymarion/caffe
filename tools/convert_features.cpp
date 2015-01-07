@@ -210,21 +210,24 @@ int main(int argc, char** argv) {
     datum.set_width(1);
     datum.set_label(lines[line_id].second);
 
+    // LOG(INFO) << datum.data().size();
     datum.clear_data();
     datum.clear_float_data();
+    // LOG(INFO) << datum.data().size();
+    // LOG(INFO) << line_id;
 
     for(int j = 0; j < fea_len; j++)
     {
       datum.add_float_data(features[line_id][j]);
     }
 
+    // LOG(INFO) << datum.data().size() << data_size;
     if (!data_size_initialized) {
       data_size = datum.channels() * datum.height() * datum.width();
       data_size_initialized = true;
     } else {
-      const string& data = datum.data();
-      CHECK_EQ(data.size(), data_size) << "Incorrect data field size "
-          << data.size();
+      CHECK_EQ(datum.float_data_size(), data_size) << "Incorrect data field size "
+          << datum.float_data_size();
     }
     // sequential
     snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
