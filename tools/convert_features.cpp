@@ -116,7 +116,8 @@ int main(int argc, char** argv) {
   }
   LOG(INFO) << "A total of " << lines.size() << " images.";
 
-  const string& db_backend = FLAGS_backend;
+  // const string& db_backend = FLAGS_backend;
+  const string& db_backend = "lmdb";
   const char* db_path = argv[4];
 
   int resize_height = std::max<int>(0, FLAGS_resize_height);
