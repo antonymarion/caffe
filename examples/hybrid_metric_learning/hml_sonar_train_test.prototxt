@@ -10,7 +10,7 @@ layers {
 	  source: "../../data/UCI/sonar/sonar_train_lmdb"
 	  backend: LMDB
 	  source_list: "../../data/UCI/sonar/sonar_train_data_list.txt"
-	  pairs_list: "../../data/UCI/sonar/sonar_train_pair_list.txt"
+	  pairs_list: "../../data/UCI/sonar/sonar_train_pair_list.txt"	  
 	  batch_size: 30
 	}
   include: { phase: TRAIN }
@@ -30,7 +30,7 @@ layers {
 	  pairs_list: "../../data/UCI/sonar/sonar_test_pair_list.txt"	  
 	  batch_size: 16
 	}
-  include: { phase: TEST }
+	include: { phase: TEST }
 }
 
 layers{
@@ -41,7 +41,7 @@ layers{
   weight_decay: 1
   weight_decay: 0
   inner_product_param {
-	num_output: 30
+	num_output: 15
 	weight_filler {
 	  type: "xavier"
 	}
@@ -58,7 +58,7 @@ layers{
 
 layers{
   name: "relu10"
-  type: RELU
+  type: SIGMOID
   bottom: "fc1"
   top: "fc1"
 }
@@ -67,7 +67,7 @@ layers{
   name: "dropout1"
   type: DROPOUT
   dropout_param{
-	dropout_ratio:0.5
+	dropout_ratio:0.8
   }
   bottom: "fc1"
   top: "dropout1"
@@ -98,7 +98,6 @@ layers {
   type: SOFTMAX
   bottom: "fc2"
   top: "prob"
-  include: { phase: TEST }
 }
 
 layers {
@@ -107,7 +106,6 @@ layers {
   bottom: "prob"
   bottom: "label"
   top: "accuracy"
-  include: { phase: TEST }
 }
 
 
@@ -131,7 +129,7 @@ layers{
   weight_decay: 1
   weight_decay: 0
   inner_product_param {
-	num_output: 30
+	num_output: 15
 	weight_filler {
 	  type: "xavier"
 	}
@@ -148,7 +146,7 @@ layers{
 
 layers{
   name: "relu10_p"
-  type: RELU
+  type: SIGMOID
   bottom: "fc1_p"
   top: "fc1_p"
 }
@@ -189,7 +187,6 @@ layers {
   type: SOFTMAX
   bottom: "fc2_p"
   top: "prob_p"
-  include: { phase: TEST }
 }
 
 layers {
@@ -198,7 +195,6 @@ layers {
   bottom: "prob_p"
   bottom: "label2"
   top: "accuracy_p"
-  include: { phase: TEST }
 }
 
 
@@ -207,7 +203,7 @@ layers{
   type: SOFTMAX_LOSS
   bottom: "fc2_p"
   bottom: "label2"
-  loss_weight: 0.5  
+  loss_weight: 0.8 
 }
 
 # ------------------
@@ -252,7 +248,7 @@ layers{
   type: INNER_PRODUCT
 
   inner_product_param{
-	num_output: 30
+	num_output: 10
 	weight_filler {
 	  type: "gaussian"
 	  std: 0.1
@@ -268,7 +264,7 @@ layers{
 
 layers {
   name: "relu_verif_1"
-  type: RELU
+  type: SIGMOID
   bottom: "fc_verif_1"
   top: "fc_verif_1"
 }
@@ -280,7 +276,7 @@ layers {
   bottom: "fc_verif_1"
   top: "fc_verif_1"
   dropout_param {
-    dropout_ratio: 0.5
+    dropout_ratio: 0.8
   }
 }
 
@@ -335,5 +331,5 @@ layers{
   type: SOFTMAX_LOSS
   bottom: "fc_verif_2"
   bottom: "label_verif"
-  loss_weight: 1 
+  loss_weight: 2 
 }

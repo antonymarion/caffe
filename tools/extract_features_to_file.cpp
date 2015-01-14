@@ -1,7 +1,7 @@
 #include <stdio.h>  // for snprintf
 #include <string>
 #include <vector>
-#include <unistd.h>
+#include <stdarg.h>
 #include <sys/stat.h>
 
 #include "boost/algorithm/string.hpp"
@@ -17,6 +17,9 @@
 #include "caffe/vision_layers.hpp"
 
 static int _MAX_PATH = 1000;
+
+#define ACCESS access
+#define MKDIR(a) mkdir((a),0755)
 
 using namespace caffe;  // NOLINT(build/namespaces)
 
@@ -39,12 +42,12 @@ static int create_directory(const char *directory)
   len = (int)strlen(temp_dir);
   for(i=0; i<len; i++)
   {
-    if(temp_dir[i] == '/')
-      temp_dir[i] = '\\';
+    if(temp_dir[i] == '\\')
+      temp_dir[i] = '/';
   }
-  if(temp_dir[len-1] != '\\')
+  if(temp_dir[len-1] != '/')
   {
-    temp_dir[len] = '\\';
+    temp_dir[len] = '/';
     temp_dir[len+1] = 0;
     len++;
   }
@@ -52,7 +55,7 @@ static int create_directory(const char *directory)
   for(i=0; i<len; i++)
   {
     dir[i] = temp_dir[i];
-    if(temp_dir[i] == '\\')
+    if(temp_dir[i] == '/')
     {
       if(i > 0)
       {
@@ -60,11 +63,11 @@ static int create_directory(const char *directory)
           continue;
         else
         {
-          if(access(dir, 0) == 0)
+          if(ACCESS(dir, 0) == 0)
             continue;
           else /* create it */
           {
-            if(mkdir(dir, S_IRWXO) != 0)
+            if(MKDIR(dir) != 0)
               return -1;
           }
         }
