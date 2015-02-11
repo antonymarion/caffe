@@ -212,6 +212,8 @@ class DropoutLayer : public NeuronLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
+  // update drop feature map layer
+  void update_mask_by_fmap(unsigned int active_value);
   /// when divided by UINT_MAX, the randomly generated values @f$u\sim U(0,1)@f$
   Blob<unsigned int> rand_vec_;
   /// the probability @f$ p @f$ of dropping any input
@@ -220,6 +222,8 @@ class DropoutLayer : public NeuronLayer<Dtype> {
   Dtype scale_;
   unsigned int uint_thres_;
   bool own_mask_;
+  
+  vector<int> mask_fmap_;
 };
 
 /**

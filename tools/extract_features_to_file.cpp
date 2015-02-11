@@ -328,38 +328,8 @@ int feature_extraction_pipeline(int argc, char** argv)
 
   int batch_size = atoi(argv[++arg_pos]);
   int num_mini_batches = num_feat / batch_size + 1;
-
-  // string save_feature_leveldb_names(argv[++arg_pos]);
-  // vector<string> leveldb_names;
-  // boost::split(leveldb_names, save_feature_leveldb_names,
-  //              boost::is_any_of(","));
-  // CHECK_EQ(blob_names.size(), leveldb_names.size()) <<
-  //     " the number of blob names and leveldb names must be equal";
-  // size_t num_features = blob_names.size();
-
-
-  // for (size_t i = 0; i < num_features; i++) {
-  //   CHECK(feature_extraction_net->has_blob(blob_names[i]))
-  //       << "Unknown feature blob name " << blob_names[i]
-  //       << " in the network " << feature_extraction_proto;
-  // }
-
-  // leveldb::Options options;
-  // options.error_if_exists = true;
-  // options.create_if_missing = true;
-  // options.write_buffer_size = 268435456;
-  // vector<shared_ptr<leveldb::DB> > feature_dbs;
-  // for (size_t i = 0; i < num_features; ++i) {
-  //   LOG(INFO)<< "Opening leveldb " << leveldb_names[i];
-  //   leveldb::DB* db;
-  //   leveldb::Status status = leveldb::DB::Open(options,
-  //                                              leveldb_names[i].c_str(),
-  //                                              &db);
-  //   CHECK(status.ok()) << "Failed to open leveldb " << leveldb_names[i];
-  //   feature_dbs.push_back(shared_ptr<leveldb::DB>(db));
-  // }
-
-  // int num_mini_batches = atoi(argv[++arg_pos]);
+  printf("num_feat: %d, num_mini_batches: %d, batch_size: %d", num_feat, num_mini_batches, batch_size);
+  LOG(ERROR) << "num_feat: "<< num_feat <<"num_mini_batches: " << num_mini_batches << "batch_size: " << batch_size;
 
   LOG(ERROR)<< "Extacting Features";
 
@@ -384,13 +354,13 @@ int feature_extraction_pipeline(int argc, char** argv)
       //replace_ext_name(feature_fn, "feat");
       create_file(feature_fn, 'b');
 
-      printf("%s\n", feature_fn);
+      //printf("%s\n", feature_fn);
 
       fp = fopen(feature_fn, "wb");
       fwrite(feature_blob_data, dim_features*sizeof(Dtype), 1, fp);
       fclose(fp);
 
-      LOG(INFO) << "Extract " << feature_fn << "Finished(" << feat_index << "/" << num_feat << ").";
+      LOG(ERROR) << "Extract " << feature_fn << "Finished(" << feat_index << "/" << num_feat << ").";
 
       feat_index++;
     }

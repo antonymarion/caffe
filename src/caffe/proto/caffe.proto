@@ -496,6 +496,7 @@ message BinaryLabelParameter {
 message DropoutParameter {
   optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
   optional string share_mask = 2;
+  optional bool by_feature_map = 3 [default = false];
 }
 
 // Message that stores parameters used by DummyDataLayer.

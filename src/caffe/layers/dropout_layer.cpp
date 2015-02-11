@@ -8,7 +8,6 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
-#define DEBUG_WUHAO 1
 #include <iostream>
 
 namespace caffe {
@@ -23,7 +22,60 @@ void DropoutLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   scale_ = 1. / (1. - threshold_);
   uint_thres_ = static_cast<unsigned int>(UINT_MAX * threshold_);
   own_mask_ = true;
+
+  // Drop feature map for convolution
+  int channels = bottom[0]->channels();
+  int num = bottom[0]->num();
+
+  if (this->layer_param_.dropout_param().by_feature_map()) {
+
+    int act_fmaps = static_cast<unsigned int>((1 - threshold_) * channels);
+    CHECK(act_fmaps > 0);
+
+    scale_ = Dtype(channels) / Dtype(act_fmaps);
+    mask_fmap_.resize(num * channels);
+
+    int i = 0, j = 0, k = 0, tmp = 0;
+
+    for (i = 0; i < num; ++i) {
+      for (j = 0; j < channels; ++j) {
+        if (j < act_fmaps) {
+          mask_fmap_[i * channels + j] = 1;
+        } else {
+          mask_fmap_[i * channels + j] = 0;
+        }
+      }
+    }
+  }
+
 }
+
+template <typename Dtype>
+void DropoutLayer<Dtype>::update_mask_by_fmap(unsigned int active_value) {
+  int i = 0, j = 0, k = 0, tmp = 0;
+  int num = rand_vec_.num();
+  int channels = rand_vec_.channels();
+  int fmap_size = rand_vec_.width() * rand_vec_.height();
+
+  for (i = 0; i < num; ++i) {
+    int* pmask_fmap = &mask_fmap_[i * channels];
+
+    for (j = channels - 1; j > 0; --j) {
+      k = caffe_rng_rand() % (j + 1);
+      tmp = pmask_fmap[k];
+      pmask_fmap[k] = pmask_fmap[j];
+      pmask_fmap[j] = tmp;
+    }
+  }
+  unsigned int* mask = rand_vec_.mutable_cpu_data();
+
+  for (i = 0; i < num * channels; ++i) {
+    for (j = 0; j < fmap_size; ++j) {
+      mask[i * fmap_size + j] = active_value * mask_fmap_[i];
+    }
+  }
+}
+
 
 template <typename Dtype>
 void DropoutLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -46,13 +98,13 @@ void DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     if (own_mask_) {
       caffe_rng_bernoulli(count, 1. - threshold_, mask);
-      #if 0 //DEBUG_WUHAO
+      #if 0 
       std::cout << "layer " << this->layer_param_.name() << " , mask updated..." << std::endl;
       #endif
     }
 
 
-#if 0 //DEBUG_WUHAO
+#if 0 
   std::cout << "layer " << this->layer_param_.name();
   std::cout << " own_mask_: " << own_mask_ << std::endl;
   for (int i = 0; i < 100; ++i) {
