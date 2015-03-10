@@ -197,6 +197,9 @@ class Im2colLayer : public Layer<Dtype> {
 template <typename Dtype> class PoolingLayer;
 template <typename Dtype> class SplitLayer;
 
+//
+template <typename Dtype> class FractionalMapLayer;
+
 /**
  * @brief Normalize the input in a local region across or within feature maps.
  *
@@ -271,6 +274,33 @@ class LRNLayer : public Layer<Dtype> {
   shared_ptr<EltwiseLayer<Dtype> > product_layer_;
   Blob<Dtype> product_input_;
   vector<Blob<Dtype>*> product_bottom_vec_;
+};
+
+
+template <typename Dtype> 
+class FractionalMapLayer : public Layer<Dtype> {
+ public:
+  explicit FractionalMapLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int MinTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  int ratio_;
 };
 
 
