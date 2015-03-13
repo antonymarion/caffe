@@ -268,6 +268,11 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new BinaryLabelLayer<Dtype>(param);
 
 
+  // ---
+  case LayerParameter_LayerType_FRACTIONAL_MAP:
+    return new FractionalMapLayer<Dtype>(param);
+
+
   case LayerParameter_LayerType_NONE:
     LOG(FATAL) << "Layer " << name << " has unspecified type.";
   default:

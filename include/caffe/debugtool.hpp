@@ -73,6 +73,7 @@ public:
     fwrite(&height, sizeof(int), 1, fp);  
     width = blob.width();
     fwrite(&width, sizeof(int), 1, fp);
+    
     const Dtype* data;
     if (write_diff) {
       data = blob.cpu_diff();
