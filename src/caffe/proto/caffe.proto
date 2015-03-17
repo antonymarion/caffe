@@ -670,12 +670,12 @@ message FractionalMapParameter {
   optional float ratio = 1 [default = 2.0];
   enum FractionMethod {
     CUBIC = 0;
-    BOX = 1;
-    TRIANGLE = 2;
-    LANCZOS2 = 3;
-    LANCZOS3 = 4;
+    NN = 1;
+    LINEAR = 2;
+    AREA = 3;
+    LANCZOS4 = 4;
   }
-  optional FractionMethod fraction = 2 [default = BOX];
+  optional FractionMethod fraction = 2 [default = NN];
 }
 
 

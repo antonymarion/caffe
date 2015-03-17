@@ -66,19 +66,19 @@ void FractionalMapLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       cv::Mat cv_img_out;
       switch (this->layer_param_.fractional_map_param().fraction()) {
         case FractionalMapParameter_FractionMethod_CUBIC:
-          cv::resize(cv_img, cv_img_out, cv::Size(fractional_width_, fractional_height_));
+          cv::resize(cv_img, cv_img_out, cv::Size(fractional_width_, fractional_height_), CV_INTER_CUBIC);
           break;
-        case FractionalMapParameter_FractionMethod_BOX:
-          cv::resize(cv_img, cv_img_out, cv::Size(fractional_width_, fractional_height_));
+        case FractionalMapParameter_FractionMethod_NN:
+          cv::resize(cv_img, cv_img_out, cv::Size(fractional_width_, fractional_height_), CV_INTER_NN);
           break;
-        case FractionalMapParameter_FractionMethod_TRIANGLE:
-          cv::resize(cv_img, cv_img_out, cv::Size(fractional_width_, fractional_height_));
+        case FractionalMapParameter_FractionMethod_LINEAR:
+          cv::resize(cv_img, cv_img_out, cv::Size(fractional_width_, fractional_height_), CV_INTER_LINEAR);
           break;
-        case FractionalMapParameter_FractionMethod_LANCZOS2:
-          cv::resize(cv_img, cv_img_out, cv::Size(fractional_width_, fractional_height_));
+        case FractionalMapParameter_FractionMethod_AREA:
+          cv::resize(cv_img, cv_img_out, cv::Size(fractional_width_, fractional_height_), CV_INTER_AREA);
           break;
-        case FractionalMapParameter_FractionMethod_LANCZOS3:
-          cv::resize(cv_img, cv_img_out, cv::Size(fractional_width_, fractional_height_));
+        case FractionalMapParameter_FractionMethod_LANCZOS4:
+          cv::resize(cv_img, cv_img_out, cv::Size(fractional_width_, fractional_height_), CV_INTER_LANCZOS4);
           break;
         default:
           LOG(FATAL) << "Unkown fractional_map method.";
@@ -100,9 +100,8 @@ void FractionalMapLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   dbg.write_blob("bottom", *bottom[0], 0);
   dbg.write_blob("top", *((*top)[0]), 0);
   dbg.close();
-  std::string input;
-  std::cout << "pause..." << std::endl; 
-  std::cin >> input;
+  //std::string input;
+  std::cout << "forward..." << std::endl; 
   #endif
 }
 
@@ -115,9 +114,60 @@ void FractionalMapLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->cpu_diff();
   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
   caffe_set((*bottom)[0]->count(), Dtype(0), bottom_diff);
+  Dtype* tmp = NULL;
+  tmp = (Dtype*)malloc(sizeof(Dtype)*fractional_height_*fractional_width_);
 
+  for (int n = 0; n < top[0]->num(); ++n){
+    for (int c = 0; c < channels_; ++c) {
+      for (int ph = 0; ph < fractional_height_; ++ph) {
+        for (int pw = 0; pw < fractional_width_; ++pw) {
+          tmp[ph * fractional_width_ + pw] = top_diff[((n * channels_ + c) * fractional_height_ 
+                                              + ph) * fractional_width_ + pw];
+        }
+      }
+      cv::Mat cv_img(fractional_width_, fractional_height_, CV_32FC1, tmp);
+      cv::Mat cv_img_out;
+      switch (this->layer_param_.fractional_map_param().fraction()) {
+        case FractionalMapParameter_FractionMethod_CUBIC:
+          cv::resize(cv_img, cv_img_out, cv::Size(width_, height_), CV_INTER_CUBIC);
+          break;
+        case FractionalMapParameter_FractionMethod_NN:
+          cv::resize(cv_img, cv_img_out, cv::Size(width_, height_), CV_INTER_NN);
+          break;
+        case FractionalMapParameter_FractionMethod_LINEAR:
+          cv::resize(cv_img, cv_img_out, cv::Size(width_, height_), CV_INTER_LINEAR);
+          break;
+        case FractionalMapParameter_FractionMethod_AREA:
+          cv::resize(cv_img, cv_img_out, cv::Size(width_, height_), CV_INTER_AREA);
+          break;
+        case FractionalMapParameter_FractionMethod_LANCZOS4:
+          cv::resize(cv_img, cv_img_out, cv::Size(width_, height_), CV_INTER_LANCZOS4);
+          break;
+        default:
+          LOG(FATAL) << "Unkown fractional_map method.";
+      }
+      for (int h = 0; h < height_; ++h) {
+        for (int w = 0; w < width_; ++w) {
+          int fractional_index = ((n * channels_ + c) * height_
+                                   + h) * width_ + w;
+          bottom_diff[fractional_index] = cv_img_out.at<float>(h, w);
+        }
+      }
+//      bottom_diff += (*bottom)[0]->offset(0, 1);
+//      top_diff += top[0]->offset(0, 1);
+    }
+  }
 
-  
+  #if debug //DEBUG
+    DebugTool<Dtype> dbg;
+    dbg.open("fractional_backwrad_map.bin");
+    dbg.write_blob("bottom", *top[0], 1);
+    dbg.write_blob("top", *((*bottom)[0]), 1);
+    dbg.close();
+    std::string input;
+    std::cout << "Backwrad..." << std::endl; 
+    std::cin >> input;
+  #endif
 }
 
 
