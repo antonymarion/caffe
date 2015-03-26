@@ -207,22 +207,6 @@ int main(int argc, char** argv) {
       crop_image(lines[line_id].second, cv_img, resize_width, is_color, &datum);
     }
 
-    /*#if debug
-      LOG(INFO) << "datum size: " << datum.channels() << ", " << datum.height() << ", " << datum.width();
-      cv::Mat out_img;
-      for (int c = 0; c < datum.channels(); ++c) {
-        for (int h = 0; h < datum.height(); ++h) {
-          for (int w = 0; w < datum.width(); ++w) {
-            int index = (c * datum.height() + h) * datum.width() + w;
-            out_img.at<cv::Vec3b>(h, w)[c] = datum.data()[index];
-            cv::imwrite("output.jpg", out_img);
-          }
-        }
-      }
-    #endif*/
-
-    LOG(INFO) << line_id;
-
     if (output_datum_size) {
       LOG(ERROR) << "datum size: " << datum.channels()
           << ", " << datum.height() << ", " << datum.width();
