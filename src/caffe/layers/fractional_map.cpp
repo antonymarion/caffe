@@ -13,7 +13,7 @@
 #include "caffe/vision_layers.hpp"
 
 #include "caffe/debugtool.hpp"
-#define debug 1
+#define debug 0
 
 namespace caffe {
 
