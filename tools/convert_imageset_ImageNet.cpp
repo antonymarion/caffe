@@ -198,7 +198,6 @@ int main(int argc, char** argv) {
     if (height > width) {
       float scale = (float)resize_width/(float)width;
       cv::resize(cv_img_origin, cv_img, cv::Size(resize_width, (int)(scale*height)));
-      cv::imwrite("resize.jpg", cv_img);
       crop_image(lines[line_id].second, cv_img, resize_height, is_color, &datum);
     }
     else {
