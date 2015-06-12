@@ -271,6 +271,9 @@ message LayerParameter {
     DISTANCE = 105;
     DISTANCE_LOSS = 106;
     BINARY_LABEL = 107;
+	
+	TRIPLET_DATA = 110;
+    TRIPLET_LOSS = 111;
 
     // ---
     FRACTIONAL_MAP = 201;
@@ -338,6 +341,9 @@ message LayerParameter {
   optional DistanceParameter distance_param  = 105;
   optional DistanceLossParameter distance_loss_param  = 106;
   optional BinaryLabelParameter binary_label_param = 107;
+  
+  optional TripletDataParameter triplet_data_param = 110;
+  optional TripletLossParameter triplet_loss_param = 111;
 
   // ----
   optional FractionalMapParameter fractional_map_param = 201;
@@ -467,6 +473,22 @@ message PairDataParameter {
   optional uint32 batch_size = 4;
   optional DB backend = 8;
 };
+
+message TripletDataParameter {
+  enum DB {
+    LEVELDB = 0;
+    LMDB = 1;
+  }
+  optional string source = 1;
+  optional string source_list = 2;
+  optional string triplet_list = 3;
+  optional uint32 batch_size = 4;
+  optional DB backend = 8 [default = LEVELDB];
+}
+
+message TripletLossParameter {
+  optional float alpha = 1;
+}
 
 message VerificationParameter {
   optional float m1 = 1;

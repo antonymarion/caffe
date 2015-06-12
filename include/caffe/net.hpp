@@ -146,6 +146,11 @@ class Net {
   const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name);
 
   void set_debug_info(const bool value) { debug_info_ = value; }
+  
+  // convert caffemodel to bin
+  inline const vector<vector<int> >&  bottom_id_vecs() {return bottom_id_vecs_;}
+  inline const vector<vector<int> >&  top_id_vecs() {return top_id_vecs_;}
+
 
   // Helpers for Init.
   /**

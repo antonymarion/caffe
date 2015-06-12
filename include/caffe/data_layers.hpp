@@ -179,6 +179,56 @@ class PairDataLayer : public BasePrefetchingDataLayer<Dtype> {
 };
 
 
+template <typename Dtype>
+class TripletDataLayer : public BasePrefetchingDataLayer<Dtype> {
+ public:
+  explicit TripletDataLayer(const LayerParameter& param)
+      : BasePrefetchingDataLayer<Dtype>(param) {}
+  virtual ~TripletDataLayer();
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_TRIPLET_DATA;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int MinTopBlobs() const { return 3; }
+  virtual inline int MaxTopBlobs() const { return 3; }
+
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  
+ protected:
+  virtual void InternalThreadEntry();
+
+  Blob<Dtype> prefetch_data2_;
+  Blob<Dtype> prefetch_data3_;
+
+  void load_index(string fn);
+  void load_list(string fn);
+
+  void get_cur_key(int pair_channel, string& keystr);
+  void get_value(string& keystr, Datum& datum);
+
+  // LEVELDB
+  shared_ptr<leveldb::DB> db_;
+  shared_ptr<leveldb::Iterator> iter_;
+  // LMDB
+  MDB_env* mdb_env_;
+  MDB_dbi mdb_dbi_;
+  MDB_txn* mdb_txn_;
+  MDB_cursor* mdb_cursor_;
+  MDB_val mdb_key_, mdb_value_;
+
+  // For pairs and image paths
+  vector<int> index_;
+  int cur_;
+  vector<string> image_paths_;
+};
+
 
 
 /**
@@ -402,5 +452,7 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 };
 
 }  // namespace caffe
+
+
 
 #endif  // CAFFE_DATA_LAYERS_HPP_
