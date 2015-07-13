@@ -179,6 +179,42 @@ class PairDataLayer : public BasePrefetchingDataLayer<Dtype> {
 };
 
 
+template <typename Dtype>
+class CharSeqDataLayer : public BasePrefetchingDataLayer<Dtype> {
+  public:
+    explicit CharSeqDataLayer(const LayerParameter& param)
+      : BasePrefetchingDataLayer<Dtype>(param) {}
+    virtual ~CharSeqDataLayer();
+    virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+    virtual inline LayerParameter_LayerType type() const {
+      return LayerParameter_LayerType_CHAR_SEQ_DATA;
+    }
+
+  void Forward_cpu(const vector<Blob<Dtype>*>& bottom, 
+    vector<Blob<Dtype>*>* top);
+
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int MaxTopBlobs() const { return 20; }
+
+ protected:
+  virtual void InternalThreadEntry();
+
+  // LEVELDB
+  shared_ptr<leveldb::DB> db_;
+  shared_ptr<leveldb::Iterator> iter_;
+  // LMDB
+  MDB_env* mdb_env_;
+  MDB_dbi mdb_dbi_;
+  MDB_txn* mdb_txn_;
+  MDB_cursor* mdb_cursor_;
+  MDB_val mdb_key_, mdb_value_;
+  // Person Feature Center
+  Dtype *character_label;
+  int   max_length;
+
+};
 
 
 /**
