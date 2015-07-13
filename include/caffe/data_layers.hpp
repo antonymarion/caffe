@@ -180,7 +180,6 @@ class PairDataLayer : public BasePrefetchingDataLayer<Dtype> {
 
 
 template <typename Dtype>
-<<<<<<< HEAD
 class CharSeqDataLayer : public BasePrefetchingDataLayer<Dtype> {
   public:
     explicit CharSeqDataLayer(const LayerParameter& param)
@@ -192,17 +191,31 @@ class CharSeqDataLayer : public BasePrefetchingDataLayer<Dtype> {
       return LayerParameter_LayerType_CHAR_SEQ_DATA;
     }
 
-  void Forward_cpu(const vector<Blob<Dtype>*>& bottom, 
-    vector<Blob<Dtype>*>* top);
-
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline int MaxTopBlobs() const { return 20; }
+  
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
 
  protected:
   virtual void InternalThreadEntry();
-
-=======
+  
+  // LEVELDB
+  shared_ptr<leveldb::DB> db_;
+  shared_ptr<leveldb::Iterator> iter_;
+  // LMDB
+  MDB_env* mdb_env_;
+  MDB_dbi mdb_dbi_;
+  MDB_txn* mdb_txn_;
+  MDB_cursor* mdb_cursor_;
+  MDB_val mdb_key_, mdb_value_;
+  // Person Feature Center
+  Dtype *character_label;
+  int   max_length;
+};
+  
+template <typename Dtype>
 class TripletDataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:
   explicit TripletDataLayer(const LayerParameter& param)
@@ -236,7 +249,6 @@ class TripletDataLayer : public BasePrefetchingDataLayer<Dtype> {
   void get_cur_key(int pair_channel, string& keystr);
   void get_value(string& keystr, Datum& datum);
 
->>>>>>> c2091314a9f9ee8bb2bde2fc7556780970d7dd1d
   // LEVELDB
   shared_ptr<leveldb::DB> db_;
   shared_ptr<leveldb::Iterator> iter_;
@@ -246,21 +258,12 @@ class TripletDataLayer : public BasePrefetchingDataLayer<Dtype> {
   MDB_txn* mdb_txn_;
   MDB_cursor* mdb_cursor_;
   MDB_val mdb_key_, mdb_value_;
-<<<<<<< HEAD
-  // Person Feature Center
-  Dtype *character_label;
-  int   max_length;
-
-};
-=======
 
   // For pairs and image paths
   vector<int> index_;
   int cur_;
   vector<string> image_paths_;
 };
-
->>>>>>> c2091314a9f9ee8bb2bde2fc7556780970d7dd1d
 
 
 /**
