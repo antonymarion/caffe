@@ -37,8 +37,8 @@ CharSeqDataLayer<Dtype>::~CharSeqDataLayer<Dtype>() {
   default:
     LOG(FATAL) << "Unknown database backend";
   }
-  if (character_label)
-    delete [] character_label;
+  if (character_label_)
+    delete [] character_label_;
 }
 
 template <typename Dtype>
@@ -149,13 +149,24 @@ void CharSeqDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   this->datum_width_ = datum.width();
   this->datum_size_ = datum.channels() * datum.height() * datum.width();
 
+  // load source list
+  /*ifstream source(this->layer_param_.char_seq_data_param().source_list().c_str());
+  if (!source) {
+    LOG(FATAL) << "Error opening image list file: ";
+    return;
+  }  
+  string filename;
+  int label;
+  while(source >> filename >> label) {
+    image_paths_.push_back(filename);
+  }
 
-  // Person Feature Center Data Reading
-  //FILE *fp = NULL;
+  LOG(INFO) << "loading image list done. Total images: " << image_paths_.size();  */
+
+
+  // load char_seq_label list
   LOG(INFO) << "Opening character sequence label file...";
-  //fp = fopen(this->layer_param_.char_seq_data_param().char_seq_list().c_str(), 'r');
   std::ifstream ifs(this->layer_param_.char_seq_data_param().char_seq_list().c_str());
-
   if(!ifs)
   {
     LOG(FATAL) << "Character Sequence Label File loading failed..";
@@ -164,33 +175,40 @@ void CharSeqDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   int num_samples = 0;
   int temp = 0;
-  max_length = this->layer_param_.char_seq_data_param().max_length();
+  max_length_ = this->layer_param_.char_seq_data_param().max_length();
   ifs >> num_samples;
   CHECK(num_samples > 0);
-  character_label = new Dtype[max_length * num_samples];
-  if (character_label == NULL)
+  character_label_ = new Dtype[max_length_ * num_samples];
+  if (character_label_ == NULL)
   {
   	LOG(INFO) << "Memory Allocate Failed..";
   	return;
   }
-  for(int i = 0; i < num_samples * max_length; i++)
+  for(int i = 0; i < num_samples * max_length_; i++)
   {
   	ifs >> temp;
-  	*(character_label + i) = temp;
- #if 0//DEBUG
-  	string str;
-  	std::cout << *(character_label + i) << "and" << temp;
-  	std::cout << "pause..";
-  	std::cin >> str;
+  	*(character_label_ + i) = temp;
+  }
+
+#if 0//DEBUG
+    string str;
+
+    for(int i=0; i < num_samples; i++)
+    {
+      for(int j=0; j < max_length_; j++)
+      {
+        std::cout << *(character_label_ + i*max_length_+j)<<" ";
+      }
+      std::cout << "pause..";
+      std::cin >> str;
+    }
+
  #endif
-  }
 
-  for (int i = 0; i < max_length; i++)
+  for (int i = 0; i < max_length_; i++)
   {
-  	(*top)[i+2]->Reshape(this->layer_param_.char_seq_data_param().batch_size(), 1, 1, 1);
+    (*top)[i+2]->Reshape(this->layer_param_.char_seq_data_param().batch_size(), 1, 1, 1);
   }
-
-
 
 }
 
@@ -269,15 +287,41 @@ void CharSeqDataLayer<Dtype>::Forward_cpu(
     caffe_copy(this->prefetch_label_.count(), this->prefetch_label_.cpu_data(),
                (*top)[1]->mutable_cpu_data());
   }
-  for (int i=0; i < max_length; i++)
+
+#if 0//DEBUG
+    string str;
+
+    for(int i=0; i < this->layer_param_.char_seq_data_param().batch_size(); i++)
+    {
+      for(int j=0; j < max_length_; j++)
+      {
+        std::cout << *(character_label_ + i*max_length_+j)<<" ";
+      }
+      std::cout << "pause..";
+      std::cin >> str;
+    }
+#endif
+
+  for (int i=0; i < max_length_; i++)
   {
   	Dtype* temp_label = (*top)[i+2]->mutable_cpu_data();
   	for (int nbatch=0; nbatch < this->layer_param_.char_seq_data_param().batch_size(); nbatch++)
   	{
-  		int idx = (int) (*top)[1]->data_at(nbatch, 0, 0, 0);
-  		*(temp_label + nbatch) = character_label[idx*max_length+i];
+  		//this operation is ill-posed, it may be fixed latter. 
+      int idx = (int) (*top)[1]->data_at(nbatch, 0, 0, 0);
+
+  		*(temp_label + nbatch) = *(character_label_ + idx*max_length_+i);
+#if 0//DEBUG
+      std::cout << "label1:" << *(character_label_ + nbatch*max_length_+i)<<"\n";
+      std::cout << "temp: " << *(temp_label + nbatch) << "\n";
+      std::cout << "top: " << *((*top)[i+2]->mutable_cpu_data()+nbatch)<<"\n";
+      std::cout << "pause..";
+      string str;
+      std::cin >> str;
+#endif
   	}
   }
+
 
   // Start a new prefetch thread
   this->CreatePrefetchThread();

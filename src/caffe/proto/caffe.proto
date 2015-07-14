@@ -470,9 +470,10 @@ message CharSeqDataParameter {
     LMDB = 1;
   }
   optional string source = 1;
-  optional string char_seq_list = 2;
-  optional uint32 max_length = 3;
-  optional uint32 batch_size = 4;
+  optional string source_list = 2;
+  optional string char_seq_list = 3;
+  optional uint32 max_length = 4;
+  optional uint32 batch_size = 5;
   optional uint32 rand_skip = 7 [default = 0];
   optional DB backend = 8;
 }

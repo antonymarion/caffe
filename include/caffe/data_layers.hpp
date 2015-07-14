@@ -197,6 +197,8 @@ class CharSeqDataLayer : public BasePrefetchingDataLayer<Dtype> {
   
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
 
  protected:
   virtual void InternalThreadEntry();
@@ -211,8 +213,9 @@ class CharSeqDataLayer : public BasePrefetchingDataLayer<Dtype> {
   MDB_cursor* mdb_cursor_;
   MDB_val mdb_key_, mdb_value_;
   // Person Feature Center
-  Dtype *character_label;
-  int   max_length;
+  Dtype *character_label_;
+  vector<string> image_paths_;
+  int   max_length_;
 };
   
 template <typename Dtype>
