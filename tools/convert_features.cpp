@@ -111,10 +111,10 @@ int main(int argc, char** argv) {
   }
   if (FLAGS_shuffle) {
     // randomly shuffle data
-    LOG(INFO) << "Shuffling data";
+    LOG(ERROR) << "Shuffling data";
     shuffle(lines.begin(), lines.end());
   }
-  LOG(INFO) << "A total of " << lines.size() << " images.";
+  LOG(ERROR) << "A total of " << lines.size() << " images.";
 
   // const string& db_backend = FLAGS_backend;
   const string& db_backend = "lmdb";
@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
   float **features;
 
   features = (float **) malloc(lines.size() * sizeof(float *));
-  LOG(INFO) << "Loading features...";
+  LOG(ERROR) << "Loading features...";
   for(i=0; i<lines.size(); i++)
   {
     str_tmp = root_folder + lines[i].first;
@@ -140,11 +140,11 @@ int main(int argc, char** argv) {
 
     if(i % 10000 == 0)
     {
-      LOG(INFO) << "Loaded" << i << "features.";
+      LOG(ERROR) << "Loaded " << i << " features.";
     }
   }
   fea_len = file_size / sizeof(float);
-  LOG(INFO) << "feature length: " << fea_len;
+  LOG(ERROR) << "feature length: " << fea_len;
 
   // Open new db
   // lmdb
