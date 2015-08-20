@@ -271,6 +271,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   // ---
   case LayerParameter_LayerType_FRACTIONAL_MAP:
     return new FractionalMapLayer<Dtype>(param);
+  case LayerParameter_LayerType_CHAR_SEQ_DATA:
+    return new CharSeqDataLayer<Dtype>(param);
 
 
   case LayerParameter_LayerType_NONE:

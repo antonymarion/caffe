@@ -278,6 +278,7 @@ message LayerParameter {
     // ---
     FRACTIONAL_MAP = 201;
     PRELU = 202;
+    CHAR_SEQ_DATA = 203;
   }
   optional LayerType type = 5; // the layer type from the enum above
 
@@ -348,6 +349,7 @@ message LayerParameter {
   // ----
   optional FractionalMapParameter fractional_map_param = 201;
   optional PReLUParameter prelu_param = 202;
+  optional CharSeqDataParameter char_seq_data_param = 203;
 
 
   // Parameters for data pre-processing.
@@ -460,6 +462,20 @@ message DataParameter {
   // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
   // data.
   optional bool mirror = 6 [default = false];
+}
+
+message CharSeqDataParameter {
+  enum DB {
+    LEVELDB = 0;
+    LMDB = 1;
+  }
+  optional string source = 1;
+  optional string source_list = 2;
+  optional string char_seq_list = 3;
+  optional uint32 max_length = 4;
+  optional uint32 batch_size = 5;
+  optional uint32 rand_skip = 7 [default = 0];
+  optional DB backend = 8;
 }
 
 message PairDataParameter {
