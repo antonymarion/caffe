@@ -18,7 +18,7 @@ using std::pair;
 using std::string;
 
 DEFINE_string(alpha, "0.2", "The threshold");
-DEFINE_int32(stride, 1000, "The stride to skip negative samples");
+DEFINE_int32(num_neg_sample, 1000, "The number of negative samples");
 
 
 
@@ -126,13 +126,14 @@ int main(int argc, char** argv)
   LOG(ERROR) << "feature length: " << feat_len;
 
   float alpha = atof(FLAGS_alpha.c_str());
-  int stride = FLAGS_stride;
+  int num_neg_sample = FLAGS_num_neg_sample;
 
-  LOG(ERROR) << "alpha = " << alpha << ", stride = " << stride;
+  LOG(ERROR) << "alpha = " << alpha << ", num_neg = " << num_neg_sample;
 
 
   // anchor
   std::ofstream outfile(argv[4]);
+  int cnt = 0;
 
   for (int idx_anchor = 0; idx_anchor < lines.size(); ++idx_anchor)
   {
@@ -148,7 +149,8 @@ int main(int argc, char** argv)
       
 
       srand((unsigned)time(NULL));
-      for (int count = 0; count < stride; count++)
+      int count = 0;
+      while(count < num_neg_sample)
       {
         int idx_neg = rand() % lines.size();
         int label_neg = lines[idx_neg].second;
@@ -157,14 +159,20 @@ int main(int argc, char** argv)
         float* feat_neg = features[idx_neg];
         float neg_scores = compute_L2_distance(feat_anchor, feat_neg, feat_len);
 
-        LOG(ERROR) << "anchor: " << idx_anchor << " pos: " 
-          << idx_pos << " neg: " << idx_neg << " pos_scores: " 
-          << pos_scores << " neg_scores: " << neg_scores;
+        if(cnt % 10000)
+        {
+          LOG(ERROR) << "anchor: " << idx_anchor << " pos: " 
+            << idx_pos << " neg: " << idx_neg << " pos_scores: " 
+            << pos_scores << " neg_scores: " << neg_scores;
+        }
+        
 
         if (pos_scores < neg_scores && pos_scores + alpha > neg_scores)
         {
-          outfile << idx_anchor<< " " << idx_pos << " " << idx_neg << "\n";
+          outfile << idx_anchor << " " << idx_pos << " " << idx_neg << "\n";
         }
+        count++;
+        cnt++;
       }
     }
   }
