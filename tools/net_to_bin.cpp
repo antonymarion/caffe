@@ -46,12 +46,15 @@ int write_blob(FILE* fp, Blob<float>* blob) {
 }
 
 int write_layer(FILE* fp, Layer<float>* layer) {
-  
+
   const LayerParameter& layer_param = layer->layer_param();
   int ksize = 0;
   int stride = 0;
   int num_output = 0;
   int param_byte_size = 0;
+  int slice_dim = 0;
+  int operation = 0;
+  int pad = 0;
 
   int i = 0;
 
@@ -61,23 +64,25 @@ int write_layer(FILE* fp, Layer<float>* layer) {
   case LayerParameter_LayerType_CONVOLUTION:
     ksize = layer_param.convolution_param().kernel_size();
     stride = layer_param.convolution_param().stride();
+    pad = layer_param.convolution_param().pad();
     num_output = layer_param.convolution_param().num_output();
 
     std::cout << "    kernel size: " << ksize << "\n";
-    std::cout << "    stride: " << stride << "\n";    
+    std::cout << "    stride: " << stride << "\n";
     std::cout << "    num_output: " << num_output << "\n";
+    std::cout << "    pad: " << pad << "\n";
 
-    param_byte_size = 3 * sizeof(int);
+    param_byte_size = 4 * sizeof(int);
     for (i = 0; i < param_blobs.size(); ++i) {
       param_byte_size += 4 * sizeof(int) + param_blobs[i]->count() * sizeof(float); // 4 dims + float data
       std::cout << "      param blob " << i << " count: " << param_blobs[i]->count() << "\n";
     }
-    fwrite(&param_byte_size, sizeof(int), 1, fp);   
+    fwrite(&param_byte_size, sizeof(int), 1, fp);
 
     fwrite(&ksize, sizeof(int), 1, fp);
     fwrite(&stride, sizeof(int), 1, fp);
     fwrite(&num_output, sizeof(int), 1, fp);
-
+    fwrite(&pad, sizeof(int), 1, fp);
 
     std::cout << "    all params byte size: " << param_byte_size << std::endl;
     for (i = 0; i < param_blobs.size(); ++i) {
@@ -90,7 +95,7 @@ int write_layer(FILE* fp, Layer<float>* layer) {
     stride = layer_param.pooling_param().stride();
 
     std::cout << "    kernel size: " << ksize << "\n";
-    std::cout << "    stride: " << stride << "\n";        
+    std::cout << "    stride: " << stride << "\n";
 
     param_byte_size = 2 * sizeof(int);
     fwrite(&param_byte_size, sizeof(int), 1, fp);
@@ -103,13 +108,13 @@ int write_layer(FILE* fp, Layer<float>* layer) {
 
     num_output = layer_param.inner_product_param().num_output();
     std::cout << "    num_output: " << num_output << "\n";
-    
+
     param_byte_size = 1 * sizeof(int);
     for (i = 0; i < param_blobs.size(); ++i) {
       param_byte_size += 4 * sizeof(int) + param_blobs[i]->count() * sizeof(float); // 4 dims + float data
       std::cout << "      param blob " << i << " count: " << param_blobs[i]->count() << "\n";
     }
-    fwrite(&param_byte_size, sizeof(int), 1, fp);   
+    fwrite(&param_byte_size, sizeof(int), 1, fp);
 
     fwrite(&num_output, sizeof(int), 1, fp);
     std::cout << "    all params byte size: " << param_byte_size << std::endl;
@@ -124,7 +129,7 @@ int write_layer(FILE* fp, Layer<float>* layer) {
     fwrite(&param_byte_size, sizeof(int), 1, fp);
 
     break;
-  case LayerParameter_LayerType_SOFTMAX: 
+  case LayerParameter_LayerType_SOFTMAX:
     param_byte_size = 0;
     fwrite(&param_byte_size, sizeof(int), 1, fp);
 
@@ -143,6 +148,32 @@ int write_layer(FILE* fp, Layer<float>* layer) {
     param_byte_size = 0;
     fwrite(&param_byte_size, sizeof(int), 1, fp);
 
+    break;
+  case LayerParameter_LayerType_SLICE:
+
+    slice_dim = layer_param.slice_param().slice_dim();
+    std::cout << "    slice_dim: " << slice_dim << std::endl;
+    param_byte_size = 4;
+    fwrite(&param_byte_size, sizeof(int), 1, fp);
+    fwrite(&slice_dim, sizeof(int), 1, fp);
+    break;
+
+  case LayerParameter_LayerType_ELTWISE:
+    operation = layer_param.eltwise_param().operation();
+    std::cout << "    operation: " << operation;
+    if (operation == 0) {
+      std::cout << " (PROD)\n";
+    } else if (operation == 1) {
+      std::cout << " (SUM)\n";
+    } else if (operation == 2) {
+      std::cout << " (MAX)\n";
+    } else {
+      std::cout << "\n[ERROR] operation not known: " << std::endl;
+    }
+
+    param_byte_size = 4;
+    fwrite(&param_byte_size, sizeof(int), 1, fp);
+    fwrite(&operation, sizeof(int), 1, fp);
     break;
   default:
     param_byte_size = 0;
@@ -195,7 +226,7 @@ int main(int argc, char** argv) {
   for (int i = 0; i < num_blobs; ++i) {
     std::cout << "blob " << i << " name: " << blob_names[i] << std::endl;
   }
-  
+
   const vector<shared_ptr<Layer<float> > >& layers = caffe_net->layers();
 
   const vector<vector<int> >& net_bottom_id_vecs = caffe_net->bottom_id_vecs();
@@ -209,7 +240,7 @@ int main(int argc, char** argv) {
     std::cout << "layer " << i << ":\n";
     std::cout << "  type: " << layer_ptr->type() << "\n";
     std::cout << "  type_name: " << layer_ptr->type_name() << "\n";
-    
+
     int layer_type = layer_ptr->type();
     fwrite(&layer_type, sizeof(int), 1, fp);
 
@@ -235,14 +266,14 @@ int main(int argc, char** argv) {
     write_layer(fp, layer_ptr);
 
 
-    std::cout << "\n------\n"; 
+    std::cout << "\n------\n";
   }
 
   fclose(fp);
 
 
 /*
-  
+
   vector<Blob<float>* > input_vec;
   shared_ptr<Blob<float> > input_blob(new Blob<float>());
   if (strcmp(argv[3], "none") != 0) {

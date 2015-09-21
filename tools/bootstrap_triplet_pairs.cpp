@@ -148,7 +148,7 @@ int main(int argc, char** argv)
       float pos_scores = compute_L2_distance(feat_anchor, feat_pos, feat_len);
       
 
-      srand((unsigned)time(NULL));
+      // srand((unsigned)time(NULL));
       int count = 0;
       while(count < num_neg_sample)
       {
@@ -159,7 +159,7 @@ int main(int argc, char** argv)
         float* feat_neg = features[idx_neg];
         float neg_scores = compute_L2_distance(feat_anchor, feat_neg, feat_len);
 
-        if(cnt % 10000)
+        if(cnt % 10000 == 0)
         {
           LOG(ERROR) << "anchor: " << idx_anchor << " pos: " 
             << idx_pos << " neg: " << idx_neg << " pos_scores: " 
