@@ -272,13 +272,14 @@ message LayerParameter {
     DISTANCE_LOSS = 106;
     BINARY_LABEL = 107;
 	
-	TRIPLET_DATA = 110;
+	  TRIPLET_DATA = 110;
     TRIPLET_LOSS = 111;
 
     // ---
     FRACTIONAL_MAP = 201;
     PRELU = 202;
     CHAR_SEQ_DATA = 203;
+    DETECTION_ACC = 204;
   }
   optional LayerType type = 5; // the layer type from the enum above
 
@@ -350,6 +351,7 @@ message LayerParameter {
   optional FractionalMapParameter fractional_map_param = 201;
   optional PReLUParameter prelu_param = 202;
   optional CharSeqDataParameter char_seq_data_param = 203;
+  optional DetectionAccParameter detection_acc_param = 204;
 
 
   // Parameters for data pre-processing.
@@ -393,6 +395,10 @@ message ArgMaxParameter {
   // If true produce pairs (argmax, maxval)
   optional bool out_max_val = 1 [default = false];
   optional uint32 top_k = 2 [default = 1];
+}
+
+message DetectionAccParameter {
+  optional float thr = 1 [default = 0.5];
 }
 
 // Message that stores parameters used by ConcatLayer
