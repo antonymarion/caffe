@@ -45,24 +45,38 @@ void DetectionAccLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   	int label = static_cast<int>(bottom_label[ind]);
   	if (label > 0)
   	{
-  		true_positive += (bottom_data[ind] >=0);
-  		false_negative += (bottom_data[ind] < 0);
+  		true_positive += (bottom_data[ind] >= thr_);
+  		false_negative += (bottom_data[ind] < thr_);
   		count_pos++;
+      /*std::cout << bottom_data[ind] << "\n";
+      std::cout << (bottom_data[ind] >= thr_)<< "\n";
+      std::cout << (bottom_data[ind] < thr_)<<"\n";*/
   	}
   	else
   	{
-  		true_negative += (bottom_data[ind] < 0);
-  		false_positive += (bottom_data[ind] >=0);
+  		true_negative += (bottom_data[ind] < thr_);
+  		false_positive += (bottom_data[ind] >=thr_);
   		count_neg++;
   	}
   }
 
   Dtype recall = (count_pos > 0)? (true_positive / count_pos) : 0;
-  Dtype percision = (true_positive > 0)? (true_positive / (true_positive + false_positive)) : 0;
+  Dtype precision = (true_positive > 0)? (true_positive / (true_positive + false_positive)) : 0;
   Dtype acc = ((count_pos+count_neg) > 0)? ((true_positive+true_negative) / (count_pos + count_neg)) : 0;
 
+  /*std::cout << "thr" << thr_ << "\n";
+  std::cout << "TP:" << true_positive <<"\n";
+  std::cout << "FP:" << false_positive <<"\n";
+  std::cout << "pos:" << count_pos <<"\n";
+  std::cout << "neg:" << count_neg <<"\n";
+  std::cout << "acc:" << acc <<"\n";
+  std::cout << "recall:" << recall <<"\n";
+  std::cout << "precision:" << precision <<"\n";
+  char temp;
+  std::cin >> temp;*/
+
   (*top)[0]->mutable_cpu_data()[0] = acc;
-  (*top)[0]->mutable_cpu_data()[1] = percision; 
+  (*top)[0]->mutable_cpu_data()[1] = precision; 
   (*top)[0]->mutable_cpu_data()[2] = recall;
 }
 
