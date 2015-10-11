@@ -266,6 +266,15 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new DistanceLossLayer<Dtype>(param);
   case LayerParameter_LayerType_BINARY_LABEL:
     return new BinaryLabelLayer<Dtype>(param);
+  case LayerParameter_LayerType_TRIPLET_DATA:
+    return new TripletDataLayer<Dtype>(param);
+  case LayerParameter_LayerType_TRIPLET_LOSS:
+    return new TripletLossLayer<Dtype>(param);
+  case LayerParameter_LayerType_L2_NORMALIZE:
+    return new L2NormalizeLayer<Dtype>(param);
+  case LayerParameter_LayerType_TRIPLET_ACCURACY:
+    return new TripletAccuracyLayer<Dtype>(param);
+
 
 
   // ---

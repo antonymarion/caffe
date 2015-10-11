@@ -920,6 +920,51 @@ class TripletLossLayer : public LossLayer<Dtype> {
   Dtype alpha_;
 };
 
+
+template <typename Dtype>
+class TripletAccuracyLayer : public Layer<Dtype> {
+ public:
+  explicit TripletAccuracyLayer(const LayerParameter& param)
+      : Layer<Dtype>(param), diff_() {}
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);  
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_TRIPLET_ACCURACY;
+  }
+
+  virtual inline int ExactNumBottomBlobs() const { return 3; }
+
+  virtual inline bool AllowForceBackward(const int bottom_index) const {
+    return true;
+  }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  /*
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  */
+  
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    
+  }
+  
+  /*
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  */
+
+  Blob<Dtype> diff_;
+  Blob<Dtype> diff2_;
+  Blob<Dtype> euc_diff_;
+  Dtype alpha_;
+};
+
+
 }  // namespace caffe
 
 #endif  // CAFFE_LOSS_LAYERS_HPP_

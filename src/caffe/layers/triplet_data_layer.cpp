@@ -253,12 +253,19 @@ void TripletDataLayer<Dtype>::get_value(string& keystr, Datum& datum){
     break;
   case PairDataParameter_DB_LMDB:
     mdb_key_.mv_size = keystr.size();
-    mdb_key_.mv_data = reinterpret_cast<void*>(&keystr[0]);  
+    mdb_key_.mv_data = reinterpret_cast<void*>(&keystr[0]); 
+
+#if 0 // DEBUG_WUHAO
+    std::cout << "keystr: " << keystr << "\n";
+    std::cout << "keystr.size(): " << keystr.size() << std::endl;
+    std::cout << "mdb_key_.size: " << mdb_key_.mv_size << " mdb_key_.mv_data: " << (char*)mdb_key_.mv_data << std::endl;
+#endif
+
     CHECK_EQ(mdb_get(mdb_txn_, mdb_dbi_, &mdb_key_, &mdb_value_), MDB_SUCCESS);   
     datum.ParseFromArray(mdb_value_.mv_data, mdb_value_.mv_size);  
-#if 0 //DEBUG_WUHAO
-    //std::cout << item_id << ": " << keystr << "\n";
-#endif
+
+
+
     break;
   /*
     CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_,
