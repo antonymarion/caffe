@@ -4,7 +4,11 @@
 
 #include <cudnn.h>
 
+#include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
+
+#define CUDNN_VERSION_MIN(major, minor, patch) \
+    (CUDNN_VERSION >= (major * 1000 + minor * 100 + patch))
 
 #define CUDNN_CHECK(condition) \
   do { \
@@ -49,10 +53,14 @@ template <typename Dtype> class dataType;
 template<> class dataType<float>  {
  public:
   static const cudnnDataType_t type = CUDNN_DATA_FLOAT;
+  static float oneval, zeroval;
+  static const void *one, *zero;
 };
 template<> class dataType<double> {
  public:
   static const cudnnDataType_t type = CUDNN_DATA_DOUBLE;
+  static double oneval, zeroval;
+  static const void *one, *zero;
 };
 
 template <typename Dtype>
@@ -65,7 +73,7 @@ inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
     int n, int c, int h, int w,
     int stride_n, int stride_c, int stride_h, int stride_w) {
   CUDNN_CHECK(cudnnSetTensor4dDescriptorEx(*desc, dataType<Dtype>::type,
-      n, c, h, w, stride_n, stride_c, stride_h, stride_w));
+        n, c, h, w, stride_n, stride_c, stride_h, stride_w));
 }
 
 template <typename Dtype>
@@ -76,7 +84,7 @@ inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
   const int stride_c = h * stride_h;
   const int stride_n = c * stride_c;
   setTensor4dDesc<Dtype>(desc, n, c, h, w,
-      stride_n, stride_c, stride_h, stride_w);
+                         stride_n, stride_c, stride_h, stride_w);
 }
 
 template <typename Dtype>
@@ -101,9 +109,9 @@ inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
 }
 
 template <typename Dtype>
-inline void createPoolingDesc(cudnnPoolingDescriptor_t* conv,
+inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
     PoolingParameter_PoolMethod poolmethod, cudnnPoolingMode_t* mode,
-    int h, int w, int stride_h, int stride_w) {
+    int h, int w, int pad_h, int pad_w, int stride_h, int stride_w) {
   switch (poolmethod) {
   case PoolingParameter_PoolMethod_MAX:
     *mode = CUDNN_POOLING_MAX;
@@ -114,9 +122,9 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* conv,
   default:
     LOG(FATAL) << "Unknown pooling method.";
   }
-  CUDNN_CHECK(cudnnCreatePoolingDescriptor(conv));
-  CUDNN_CHECK(cudnnSetPooling2dDescriptor(*conv, *mode, h, w,
-        0, 0, stride_h, stride_w));
+  CUDNN_CHECK(cudnnCreatePoolingDescriptor(pool_desc));
+  CUDNN_CHECK(cudnnSetPooling2dDescriptor(*pool_desc, *mode, h, w,
+        pad_h, pad_w, stride_h, stride_w));
 }
 
 }  // namespace cudnn
