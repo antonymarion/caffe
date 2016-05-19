@@ -92,9 +92,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
       LOG(INFO) << "Image List file " << string(argv[4]) << " opened.";
     }
 
-    while(!ifs.eof()){
+    while(getline(ifs, path)){
       vector<string>().swap(str);
-      getline(ifs, path);
       boost::split(str, path, boost::is_any_of(" "));
       img_path.push_back(str[0]);
     }
