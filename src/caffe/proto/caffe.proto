@@ -401,6 +401,12 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+
+  // My layer
+  optional PairDataParameter pair_data_param = 501;
+  optional BinaryLabelParameter binary_label_param = 502;
+  optional SliceLabelParameter slice_label_param = 503;
+
 }
 
 // Message that stores parameters used to apply transformation
@@ -537,6 +543,10 @@ message BiasParameter {
   // Default is the zero (0) initialization, resulting in the BiasLayer
   // initially performing the identity operation.
   optional FillerParameter filler = 3;
+}
+
+message BinaryLabelParameter {
+  optional float negative_target = 1 [default = -1];
 }
 
 message ContrastiveLossParameter {
@@ -1089,6 +1099,10 @@ message SliceParameter {
   optional uint32 slice_dim = 1 [default = 1];
 }
 
+message SliceLabelParameter {
+    optional uint32 num = 1;
+}
+
 // Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer
 message SoftmaxParameter {
   enum Engine {
@@ -1158,6 +1172,19 @@ message WindowDataParameter {
   optional bool cache_images = 12 [default = false];
   // append root_folder to locate images
   optional string root_folder = 13 [default = ""];
+}
+
+message PairDataParameter{
+  enum DB {
+    LEVELDB = 0;
+    LMDB = 1;
+  }
+
+  optional string source = 1;
+  optional string source_list = 2;
+  optional string pairs_list = 3;
+  optional uint32 batch_size = 4;
+  optional DB backend = 8;
 }
 
 message SPPParameter {
@@ -1372,3 +1399,5 @@ message PReLUParameter {
   // Whether or not slope paramters are shared across channels.
   optional bool channel_shared = 2 [default = false];
 }
+
+
