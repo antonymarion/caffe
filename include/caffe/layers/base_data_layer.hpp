@@ -43,6 +43,13 @@ class BaseDataLayer : public Layer<Dtype> {
   TransformationParameter transform_param_;
   shared_ptr<DataTransformer<Dtype> > data_transformer_;
   bool output_labels_;
+
+  int datum_channels_;
+  int datum_height_;
+  int datum_width_;
+  int datum_size_;
+  Blob<Dtype> data_mean_;
+  const Dtype* mean_;
 };
 
 template <typename Dtype>
