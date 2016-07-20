@@ -22,7 +22,7 @@ public:
     virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
         const vector<Blob<Dtype>*>& top);
 
-    virtual inline int ExactNumBottomBlobs() const { return 4; }
+    virtual inline int ExactNumBottomBlobs() const { return 3; }
     virtual inline const char* type() const { return "TripletLoss"; }
     /**
     * Unlike most loss layers, in the TripletLossLayer we can backpropagate
