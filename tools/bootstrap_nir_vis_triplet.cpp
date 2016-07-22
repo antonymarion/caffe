@@ -25,9 +25,9 @@
 using namespace std;
 using boost::replace_all;
 
-DEFINE_string(alpha, "40", "The threshold");
+DEFINE_string(alpha, "400", "The threshold");
 DEFINE_int32(num_pos_sample, 100, "The number of positive samples");
-DEFINE_int32(num_neg_sample, 500, "The number of negative samples");
+DEFINE_int32(num_neg_sample, 800, "The number of negative samples");
 
 int _MAX_PATH = 10000;
 
@@ -88,7 +88,7 @@ static float compute_L2_distance(float* feat1, float* feat2, int feat_len)
 
   for (int i = 0; i < feat_len; ++i )
   {
-    distance += (feat1[i] - feat2[i])*(feat1[i] - feat2[i]);
+    distance += sqrt((feat1[i] - feat2[i])*(feat1[i] - feat2[i]));
   }
   return distance;
 }
@@ -242,7 +242,7 @@ int main(int argc, char** argv) {
             float* feat_neg = gallary_features[idx_neg];
             float score_neg = compute_L2_distance(feat_anchor, feat_neg, 256);
 
-            if(score_pos + alpha > score_neg) {
+            if(score_pos < score_neg && score_pos + alpha > score_neg) {
                 outfile_anchor << gallary_lines[idx_anchor].first << " " << gallary_lines[idx_anchor].second << endl;
                 outfile_pos << probe_lines[idx_pos].first << " " << probe_lines[idx_pos].second << endl;
                 outfile_neg << gallary_lines[idx_neg].first << " " << gallary_lines[idx_neg].second << endl;
@@ -259,50 +259,4 @@ int main(int argc, char** argv) {
 
 
 
-
-
-  /*for (int i = 0; i < num_per_class.size(); ++i)
-  {
-    int num = num_per_class[i];
-    int pos_cnt = 0;
-    while (pos_cnt < num_pos_sample)
-    {
-      int neg_cnt = 0;
-      idx_anchor = idx_head[i] + rand() % num;
-      idx_pos = idx_head[i] + rand() % num;
-
-      if (idx_anchor == idx_pos)
-          continue;
-
-      float* feat_anchor = features[idx_anchor];
-      float* feat_pos = features[idx_pos];
-      float pos_scores = compute_L2_distance(feat_anchor, feat_pos, feat_len);
-      pos_cnt++;
-
-      while (neg_cnt < num_neg_sample)
-      {
-        idx_neg = rand() % lines.size();
-        if (lines[idx_neg].second == lines[idx_anchor].second)
-            continue;
-        float* feat_neg = features[idx_neg];
-        float neg_scores = compute_L2_distance(feat_anchor, feat_neg, feat_len);
-
-        if (pos_scores < neg_scores && pos_scores + alpha > neg_scores)
-        {
-          outfile << idx_anchor << " " << idx_pos << " " << idx_neg << "\n";
-        }
-        neg_cnt++;
-        count++;
-
-        if(count % 100000 == 0)
-        {
-          LOG(ERROR) << "anchor: " << idx_anchor << " pos: " 
-            << idx_pos << " neg: " << idx_neg << " pos_scores: " 
-            << pos_scores << " neg_scores: " << neg_scores;
-        }
-      }
-    }
-  }
-  
-  outfile.close();*/
 }
