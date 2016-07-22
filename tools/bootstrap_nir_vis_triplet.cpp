@@ -75,8 +75,6 @@ unsigned char * read_file_buffer(const string filename, int &size) {
 static float compute_L2_distance(float* feat1, float* feat2, int feat_len)
 {
   float distance = 0;
-  float norm_feat1 = 0;
-  float norm_feat2 = 0;
   // for (int i = 0; i < feat_len; ++i)
   // {
   //   norm_feat1 += feat1[i] * feat1[i];
@@ -88,7 +86,7 @@ static float compute_L2_distance(float* feat1, float* feat2, int feat_len)
 
   for (int i = 0; i < feat_len; ++i )
   {
-    distance += sqrt((feat1[i] - feat2[i])*(feat1[i] - feat2[i]));
+    distance += (feat1[i] - feat2[i])*(feat1[i] - feat2[i]);
   }
   return distance;
 }
@@ -159,7 +157,7 @@ int main(int argc, char** argv) {
   vector<pair<string, int> > probe_lines;
   vector<pair<string, int> > gallary_lines;
   string filename;
-  int label;
+
 
   ReadFeatureList(probe, probe_lines);
   ReadFeatureList(gallary, gallary_lines);
