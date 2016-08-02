@@ -246,7 +246,7 @@ int main(int argc, char** argv) {
   int num_layers = layers.size();
   fwrite(&num_layers, sizeof(int), 1, fp);
 
-  for (int i = 0; i < layers.size(); ++i) {
+  for (int i = 1; i < layers.size(); ++i) {
     Layer<float>* layer_ptr = &(*layers[i]);
     std::cout << "layer " << i << ":\n";
     std::cout << "  type: " << layer_ptr->type() << "\n";
