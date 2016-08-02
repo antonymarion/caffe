@@ -72,7 +72,9 @@ int write_layer(FILE* fp, Layer<float>* layer) {
     // std::cout<<"=conv="<<std::endl;
     ksize = *(layer_param.convolution_param().kernel_size().begin());
     stride = *(layer_param.convolution_param().stride().begin());
-    pad = *(layer_param.convolution_param().pad().begin());
+    if(NULL != layer_param.convolution_param().pad().begin()){
+      pad = *(layer_param.convolution_param().pad().begin());
+    }
     num_output = layer_param.convolution_param().num_output();
 
     std::cout << "    convolution kernel size: " << ksize << "\n";
@@ -171,11 +173,14 @@ int write_layer(FILE* fp, Layer<float>* layer) {
     } else {
       std::cout << "\n[ERROR] operation not known: " << std::endl;
     }
-
     param_byte_size = 4;
     fwrite(&param_byte_size, sizeof(int), 1, fp);
     fwrite(&operation, sizeof(int), 1, fp);
-  }else{
+  } else if(!strcmp(layer->type(),"BatchNorm")) { 
+
+  } else if(!strcmp(layer->type(),"Scale")) {    // TO DO
+
+  } else{
     param_byte_size = 0;
     fwrite(&param_byte_size, sizeof(int), 1, fp);
     std::cout << "[ERROR2] Layer Type: " << layer->type() << " not supported.\n";
@@ -247,27 +252,29 @@ int main(int argc, char** argv) {
     std::cout << "  type: " << layer_ptr->type() << "\n";
     //std::cout << "  type_name: " << layer_ptr->type_name() << "\n";
 
-    int layer_type=0;
+    int layer_type = 0;
     if(!strcmp(layer_ptr->type(),"Convolution")){
-      layer_type=4;
+      layer_type = 4;
     }else if(!strcmp(layer_ptr->type(),"Pooling")){
-      layer_type=17;
+      layer_type = 17;
     }else if(!strcmp(layer_ptr->type(),"InnerProduct")){
-      layer_type=14;
+      layer_type = 14;
     }else if(!strcmp(layer_ptr->type(),"Slice")){
-      layer_type=33;
+      layer_type = 33;
     }else if(!strcmp(layer_ptr->type(),"Eltwise")){
-      layer_type=25;
+      layer_type = 25;
     }else if(!strcmp(layer_ptr->type(),"ReLU")){
-      layer_type=18;
+      layer_type = 18;
     }else if(!strcmp(layer_ptr->type(),"Flatten")){
-      layer_type=8;
+      layer_type = 8;
+    }else if(!strcmp(layer_ptr->type(),"BatchNorm")) { 
+      layer_type = 139;
+    }else if(!strcmp(layer_ptr->type(),"Scale")) {   
+      layer_type = 142;
     }else{
       std::cout << "[ERROR1] Layer Type: " << layer_ptr->type() << " not supported.\n";
       return -1;
     }
-
-
 
     fwrite(&layer_type, sizeof(int), 1, fp);
 
