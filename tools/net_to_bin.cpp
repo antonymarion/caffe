@@ -69,7 +69,7 @@ int write_layer(FILE* fp, Layer<float>* layer) {
   // std::cout<<"================"<<layer->type()<<"================"<<std::endl;
   
   if(!strcmp(layer->type(),"Convolution")) {
-    // std::cout<<"=conv="<<std::endl;
+    std::cout<<"=conv="<<std::endl;
     ksize = *(layer_param.convolution_param().kernel_size().begin());
     stride = *(layer_param.convolution_param().stride().begin());
     if(NULL != layer_param.convolution_param().pad().begin()){
@@ -101,7 +101,7 @@ int write_layer(FILE* fp, Layer<float>* layer) {
 
   }else if(!strcmp(layer->type(),"Pooling")){
     // std::cout<<"=pool="<<std::endl;
-    ksize = layer_param.pooling_param().kernel_size();
+    ksize  = layer_param.pooling_param().kernel_size();
     stride = layer_param.pooling_param().stride();
 
     std::cout << "    pooling kernel size: " << ksize << "\n";
@@ -176,10 +176,35 @@ int write_layer(FILE* fp, Layer<float>* layer) {
     param_byte_size = 4;
     fwrite(&param_byte_size, sizeof(int), 1, fp);
     fwrite(&operation, sizeof(int), 1, fp);
+
   } else if(!strcmp(layer->type(),"BatchNorm")) { 
+    //std::cout<<"=BatchNorm="<<std::endl;
+    param_byte_size = 4;
+    for (i = 0; i < param_blobs.size(); ++i) {
+      param_byte_size += param_blobs[i]->count() * sizeof(float); // float data
+      std::cout << "      param blob " << i << " count: " << param_blobs[i]->count() << "\n";
+    }
 
-  } else if(!strcmp(layer->type(),"Scale")) {    // TO DO
+    fwrite(&param_byte_size, sizeof(int), 1, fp);
+    std::cout << "    all params byte size: " << param_byte_size << std::endl;
+    for (i = 0; i < param_blobs.size(); ++i) {
+      write_blob(fp, &(*(param_blobs[i])));
+    }
 
+  } else if(!strcmp(layer->type(),"Scale")) { 
+    //std::cout<<"=Scale="<<std::endl;
+    param_byte_size = 4;
+    for (i = 0; i < param_blobs.size(); ++i) {
+      param_byte_size += param_blobs[i]->count() * sizeof(float); // float data
+      std::cout << "      param blob " << i << " count: " << param_blobs[i]->count() << "\n";
+    }
+
+    fwrite(&param_byte_size, sizeof(int), 1, fp);
+    std::cout << "    all params byte size: " << param_byte_size << std::endl;
+    for (i = 0; i < param_blobs.size(); ++i) {
+      write_blob(fp, &(*(param_blobs[i])));
+    }
+    
   } else{
     param_byte_size = 0;
     fwrite(&param_byte_size, sizeof(int), 1, fp);
