@@ -7,6 +7,7 @@
 #include "caffe/layers/loss_layer.hpp"
 #include "caffe/layers/triplet_loss_layer.hpp"
 
+using namespace std;
 
 namespace caffe {
 
@@ -78,7 +79,7 @@ void TripletLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         dot1 = caffe_cpu_dot(dim, diff_ap_data + (i*dim), diff_ap_data + (i*dim));
         dot2 = caffe_cpu_dot(dim, diff_an_data + (i*dim), diff_an_data + (i*dim));
         euc_diff_data[i] = std::max(dot1 - dot2 + margin, Dtype(0));
-        loss += (euc_diff_data[i]) / (num * 2);
+        loss += (euc_diff_data[i]) / (num * Dtype(2));
     }
 
     top[0]->mutable_cpu_data()[0] = loss;
@@ -110,22 +111,31 @@ void TripletLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     if(propagate_down[0]) {
         for(int k = 0; k < num; ++k) {
-            caffe_copy(count, diff_pn_.cpu_data(), bottom0_diff);
-            caffe_scal(dim, - euc_diff_data[k], bottom0_diff + dim * k);
+            // caffe_copy(count, diff_pn_.cpu_data(), bottom0_diff);
+            // caffe_scal(dim, - euc_diff_data[k], bottom0_diff + dim * k);
+            caffe_cpu_axpby(dim, -euc_diff_data[k], 
+                diff_pn_.cpu_data()+ dim * k, Dtype(0),
+                bottom0_diff + dim * k);
         }
     }
 
     if(propagate_down[1]) {
         for(int k = 0; k < num; ++k) {
-            caffe_copy(count, diff_ap_.cpu_data(), bottom1_diff);
-            caffe_scal(dim, - euc_diff_data[k], bottom1_diff + dim * k);
+            // caffe_copy(count, diff_ap_.cpu_data(), bottom1_diff);
+            // caffe_scal(dim, - euc_diff_data[k], bottom1_diff + dim * k);
+            caffe_cpu_axpby(dim, -euc_diff_data[k], 
+                diff_ap_.cpu_data()+ dim * k, Dtype(0),
+                bottom1_diff + dim * k);
         }
     }
 
     if(propagate_down[2]) {
         for(int k = 0; k < num; ++k) {
-            caffe_copy(count, diff_an_.cpu_data(), bottom2_diff);
-            caffe_scal(dim, euc_diff_data[k], bottom2_diff + dim * k);
+            // caffe_copy(count, diff_an_.cpu_data(), bottom2_diff);
+            // caffe_scal(dim, euc_diff_data[k], bottom2_diff + dim * k);
+            caffe_cpu_axpby(dim, euc_diff_data[k], 
+                diff_an_.cpu_data()+ dim * k, Dtype(0),
+                bottom2_diff + dim * k);
         }
     }
 
