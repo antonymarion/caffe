@@ -268,7 +268,7 @@ int main(int argc, char** argv) {
   const vector<vector<int> >& net_bottom_id_vecs = caffe_net->bottom_id_vecs();
   const vector<vector<int> >& net_top_id_vecs =  caffe_net->top_id_vecs();
 
-  int num_layers = layers.size();
+  int num_layers = layers.size() - 1;
   fwrite(&num_layers, sizeof(int), 1, fp);
 
   for (int i = 1; i < layers.size(); ++i) {

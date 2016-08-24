@@ -408,7 +408,8 @@ message LayerParameter {
   optional BinaryLabelParameter binary_label_param = 502;
   optional SliceLabelParameter slice_label_param = 503;
   optional TripletLossParameter triplet_loss_param = 504;
-  //optional L1LossParameter l1_loss_param = 505;
+  optional MultiViewParameter multi_view_param = 505;
+
 
 }
 
@@ -829,6 +830,19 @@ message InnerProductParameter {
   // of the weight matrix. The weight matrix itself is not going to be transposed
   // but rather the transfer flag of operations will be toggled accordingly.
   optional bool transpose = 6 [default = false];
+}
+
+message MultiViewParameter {
+  optional uint32 num_output_shared = 1;
+  optional uint32 num_output_unique = 2;
+
+  optional bool bias_term_shared = 3 [default = true];
+  optional FillerParameter weight_filler_shared = 4;
+  optional FillerParameter bias_filler_shared = 5;
+  optional FillerParameter weight_filler_unique_1 = 6;
+  optional FillerParameter weight_filler_unique_2 = 7;
+
+  optional float lambda = 8;
 }
 
 message InputParameter {
