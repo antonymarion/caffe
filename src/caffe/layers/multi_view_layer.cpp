@@ -131,17 +131,17 @@ void MultiViewLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* V1 = this->blobs_[1]->cpu_data();
     const Dtype* V2 = this->blobs_[2]->cpu_data();
 
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
       M_shared_, N_shared_, K_shared_, (Dtype)1.,
       bottom_data_1, W, (Dtype)0., top_data_shared_1); 
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
       M_shared_, N_shared_, K_shared_, (Dtype)1.,
       bottom_data_2, W, (Dtype)0., top_data_shared_2);   
 
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
       M_unique_1_, N_unique_1_, K_unique_1_, (Dtype)1.,
       bottom_data_1, V1, (Dtype)0., top_data_unique_1); 
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
       M_unique_2_, N_unique_2_, K_unique_2_, (Dtype)1.,
       bottom_data_2, V2, (Dtype)0., top_data_unique_2); 
 
@@ -237,7 +237,6 @@ void MultiViewLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     //update b
     if (bias_term_shared_ && this->param_propagate_down_[3]) {
         const Dtype* top_diff_shared_1 = top[0]->cpu_diff();
-        // Gradient with respect to bias
         caffe_cpu_gemv<Dtype>(CblasTrans, M_shared_, N_shared_, (Dtype)0.5, top_diff_shared_1,
             bias_multiplier_shared_.cpu_data(), (Dtype)1.,
             this->blobs_[3]->mutable_cpu_diff());
