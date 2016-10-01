@@ -409,6 +409,8 @@ message LayerParameter {
   optional SliceLabelParameter slice_label_param = 503;
   optional TripletLossParameter triplet_loss_param = 504;
   optional MultiViewParameter multi_view_param = 505;
+  optional UpsampleParameter upsample_param = 506;
+  optional DenseFaceImageDataParameter dense_face_image_data_param = 507;
 
 
 }
@@ -434,6 +436,49 @@ message TransformationParameter {
   optional bool force_color = 6 [default = false];
   // Force the decoded image to have 1 color channels.
   optional bool force_gray = 7 [default = false];
+}
+
+message UpsampleParameter {
+  // DEPRECATED. No need to specify upsampling scale factors when
+  // exact output shape is given by upsample_h, upsample_w parameters.
+  optional uint32 scale = 1 [default = 2];
+  // DEPRECATED. No need to specify upsampling scale factors when
+  // exact output shape is given by upsample_h, upsample_w parameters.
+  optional uint32 scale_h = 2;
+  // DEPRECATED. No need to specify upsampling scale factors when
+  // exact output shape is given by upsample_h, upsample_w parameters.
+  optional uint32 scale_w = 3;
+  // DEPRECATED. Specify exact output height using upsample_h. This
+  // parameter only works when scale is 2
+  optional bool pad_out_h = 4 [default = false];
+  // DEPRECATED. Specify exact output width using upsample_w. This
+  // parameter only works when scale is 2
+  optional bool pad_out_w = 5 [default = false];
+  optional uint32 upsample_h = 6;
+  optional uint32 upsample_w = 7;
+}
+
+message DenseFaceImageDataParameter {
+  // Specify the data source file.
+  optional string source = 1;
+  // Specify the batch size.
+  optional uint32 batch_size = 2;
+  // The rand_skip variable is for the data layer to skip a few data points
+  // to avoid all asynchronous sgd clients to start at the same point. The skip
+  // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
+  // be larger than the number of keys in the database.
+  optional uint32 rand_skip = 3 [default = 0];
+  // Whether or not ImageLayer should shuffle the list of files at every epoch.
+  optional bool shuffle = 4 [default = false];
+  // It will also resize images if new_height or new_width are not zero.
+  optional uint32 new_height = 5 [default = 0];
+  optional uint32 new_width = 6 [default = 0];
+  // Specify if the images are color or gray
+  optional bool is_color = 7 [default = true];
+  optional string mean_file = 8;
+  optional string root_folder = 9 [default = ""];
+  optional bool mirror = 10 [default = false];
+  optional bool is_color_clean = 13 [default = true];
 }
 
 // Message that stores parameters shared by loss layers

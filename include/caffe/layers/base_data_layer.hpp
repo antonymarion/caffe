@@ -55,7 +55,7 @@ class BaseDataLayer : public Layer<Dtype> {
 template <typename Dtype>
 class Batch {
  public:
-  Blob<Dtype> data_, label_;
+  Blob<Dtype> data_, label_, clean_, data_1_;
 };
 
 template <typename Dtype>

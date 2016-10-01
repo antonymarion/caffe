@@ -37,6 +37,9 @@ class DataTransformer {
    */
   void Transform(const Datum& datum, Blob<Dtype>* transformed_blob);
 
+  void Transform(const cv::Mat& cv_img,
+                                       Blob<Dtype>* transformed_blob,
+                                       bool preserve_pixel_vals);
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to a vector of Datum.

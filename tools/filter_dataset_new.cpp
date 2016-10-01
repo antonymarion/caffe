@@ -136,9 +136,11 @@ int feature_extraction_pipeline(int argc, char** argv) {
     int feat_index = 1;
 
 
-    const boost::shared_ptr<Blob<Dtype> > data_blob =  
-                feature_extraction_net.blob_by_name("data");
-    const int batch_size = data_blob->num();
+    // const boost::shared_ptr<Blob<Dtype> > data_blob =  
+    //             feature_extraction_net.blob_by_name("data");
+    // const int batch_size = data_blob->num();
+    const int batch_size = 16;
+
 
     for (int i = 0; i < img_path.size(); ++i) {
       sprintf(save_feature_path, "%s%s", save_dir.c_str(), img_path[i].c_str());
