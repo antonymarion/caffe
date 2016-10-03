@@ -17,8 +17,8 @@ TODO:
 #include "caffe/layers/hdf5_data_pred_layer.hpp"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/prediction.hpp"
-#include <cv.h>
-#include <highgui.h>
+// #include <cv.h>
+// #include <highgui.h>
 
 namespace caffe {
 
@@ -204,11 +204,6 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 		else v1 += 4;
 	}
 	int idv1 = (idv2/8)*8+v1; //id (in dbase) of the first view to use
-	std::cout<<idv2<<" -> view "<<v2<<std::endl;
-	std::cout<<" -> dir "<<dir<<std::endl;
-	std::cout<<v1<<" -> id "<<idv1<<std::endl;
-
-	std::cout<<hdf_blobs_[0]->shape_string()<<std::endl;
 
 	//WARNING faire prediction
 	Blob<Dtype>* input_layer = pred_net_.input_blobs()[0];
@@ -217,15 +212,7 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           &hdf_blobs_[0]->cpu_data()[idv1 * data_dim],
 			   input_layer->mutable_cpu_data());
 	
-	cv::Mat im1 = cv::Mat(256,256,CV_32FC1, input_layer->mutable_cpu_data());
-  	cv::namedWindow( "sk1", CV_WINDOW_NORMAL );
-	cv::imshow("sk1",im1);
-cv::Mat im2 = cv::Mat(256,256,CV_32FC1, &hdf_blobs_[0]->mutable_cpu_data()[idv2 * data_dim]);
-  	cv::namedWindow( "sk2", CV_WINDOW_NORMAL );
-	cv::imshow("sk2",im2);
-	cv::waitKey(0);
 	pred_net_.Forward();
-	std::cout<<pred_net_.output_blobs()[0]->shape_string()<<std::endl;
 
 	// cv::Mat pred = cv::Mat(10*64,64,CV_64FC1);//, &pred_net_.output_blobs()[0]->mutable_cpu_data()[64*30]);
 	// //pred *= 255;

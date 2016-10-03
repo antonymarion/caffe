@@ -2,8 +2,8 @@
 
 #include <vector>
 #include <Eigen/Core>
-#include <cv.h>
-#include <highgui.h>
+// #include <cv.h>
+// #include <highgui.h>
 
 namespace caffe {
 	
@@ -98,51 +98,51 @@ Eigen::Matrix<Dtype,3,1> rotate_coords(Dtype x, Dtype y, Dtype z,
 
 
 
-float interpolate( float val, float y0, float x0, float y1, float x1 ) {
-    return (val-x0)*(y1-y0)/(x1-x0) + y0;
-}
+// float interpolate( float val, float y0, float x0, float y1, float x1 ) {
+//     return (val-x0)*(y1-y0)/(x1-x0) + y0;
+// }
 
-float base( float val ) {
-    if ( val <= -0.75 ) return 0;
-    else if ( val <= -0.25 ) return interpolate( val, 0.0, -0.75, 1.0, -0.25 );
-    else if ( val <= 0.25 ) return 1.0;
-    else if ( val <= 0.75 ) return interpolate( val, 1.0, 0.25, 0.0, 0.75 );
-    else return 0.0;
-}
+// float base( float val ) {
+//     if ( val <= -0.75 ) return 0;
+//     else if ( val <= -0.25 ) return interpolate( val, 0.0, -0.75, 1.0, -0.25 );
+//     else if ( val <= 0.25 ) return 1.0;
+//     else if ( val <= 0.75 ) return interpolate( val, 1.0, 0.25, 0.0, 0.75 );
+//     else return 0.0;
+// }
 
-cv::Vec3b jetColor(float gray)
-{
-	return cv::Vec3b(base( gray + 0.5 )*255,base( gray )*255, base( gray - 0.5 )*255);
-}
+// cv::Vec3b jetColor(float gray)
+// {
+// 	return cv::Vec3b(base( gray + 0.5 )*255,base( gray )*255, base( gray - 0.5 )*255);
+// }
 
-	template <typename Dtype>
-cv::Mat iso_surface(const  Grid<Dtype> &vox,
-					float threshold)
-{
-	int size = vox[0].rows();
-	cv::Mat img(size, size,CV_8UC3);
-	for(int i = 0; i <size; i++)
-	{
-		for(int j = 0; j < size; j++)
-		{
-			int c_depth = -1;
-			for(int c = 0; c < size; c++)
-			{
-float val_depth= vox[c](i,j);
-				if (val_depth > threshold)
-				{
-					c_depth = c;
-					break;
-				}
-			}
-			float depth = (c_depth+0.5)/(size);
-			cv::Vec3b color = jetColor(depth*2-1);
-			img.at<cv::Vec3b>(i, j)=color;
-		}
-	}
+// 	template <typename Dtype>
+// cv::Mat iso_surface(const  Grid<Dtype> &vox,
+// 					float threshold)
+// {
+// 	int size = vox[0].rows();
+// 	cv::Mat img(size, size,CV_8UC3);
+// 	for(int i = 0; i <size; i++)
+// 	{
+// 		for(int j = 0; j < size; j++)
+// 		{
+// 			int c_depth = -1;
+// 			for(int c = 0; c < size; c++)
+// 			{
+// float val_depth= vox[c](i,j);
+// 				if (val_depth > threshold)
+// 				{
+// 					c_depth = c;
+// 					break;
+// 				}
+// 			}
+// 			float depth = (c_depth+0.5)/(size);
+// 			cv::Vec3b color = jetColor(depth*2-1);
+// 			img.at<cv::Vec3b>(i, j)=color;
+// 		}
+// 	}
 
-	return img;
-}
+// 	return img;
+// }
 	
 
 //takes only blobs and do the work (go to eigen and rotate) AVOID COPYING!
@@ -155,8 +155,6 @@ float val_depth= vox[c](i,j);
 					  Dtype * output)  //WARNING a voir
 	{
 		//go from pred to a Grid<Dtype>
- std::cout<<"begin rotate"<<std::endl;
-
 		int output_channels=pred->channels();
 		int output_width = pred->width();
 		int output_height = pred->height();
@@ -172,7 +170,6 @@ float val_depth= vox[c](i,j);
 			output_data += size*size;
 			grid[c] = channel;
 		}
- std::cout<<"ok grid"<<std::endl;
 		//transform viewpoint, view_mat, proj_mat into eigen matrices
 		Eigen::Map<const Eigen::Matrix<Dtype,4,4> > view(view_mat);
 		Eigen::Map<const Eigen::Matrix<Dtype,4,4> > proj(proj_mat);
@@ -182,7 +179,6 @@ float val_depth= vox[c](i,j);
 		Eigen::Matrix<Dtype,4,4> model;
 		model = new_view*model_old.inverse();
 model=model.inverse();
- std::cout<<"compute transform"<<std::endl;
 // std::cout<<model_old<<std::endl<<std::endl;
 // std::cout<<new_view<<std::endl<<std::endl;
 // std::cout<<model<<std::endl<<std::endl;
@@ -191,20 +187,18 @@ model=model.inverse();
 		//rotate
 		Grid<Dtype> gt12 = rotate_voxels_prediction<Dtype>(grid,  model, view, proj);
 		//put into output
- std::cout<<"rotate ok"<<std::endl;
-cv::Mat pred1 = iso_surface(grid, 0.3);
-  	cv::namedWindow( "pred1", CV_WINDOW_NORMAL );
-	cv::imshow("pred1",pred1);
-cv::Mat pred2 = iso_surface(gt12, 0.3);
-  	cv::namedWindow( "pred2", CV_WINDOW_NORMAL );
-	cv::imshow("pred2",pred2);
-	cv::waitKey(0);
+// cv::Mat pred1 = iso_surface(grid, 0.3);
+//   	cv::namedWindow( "pred1", CV_WINDOW_NORMAL );
+// 	cv::imshow("pred1",pred1);
+// cv::Mat pred2 = iso_surface(gt12, 0.3);
+//   	cv::namedWindow( "pred2", CV_WINDOW_NORMAL );
+// 	cv::imshow("pred2",pred2);
+// 	cv::waitKey(0);
 		for(int c = 0; c < size; c++)
 		{
 			std::memcpy(output, gt12[c].data() ,size * size * sizeof(Dtype));
 			output += size*size;
 		}
- std::cout<<"copied"<<std::endl;
 	}
 
 	template void rotate_blobs(const Blob<double> * pred, const double* viewpoint1, const double* viewpoint2, const double* view_mat, const double* proj_mat, double * output);
