@@ -14,7 +14,7 @@ Grid<Dtype> rotate_voxels_prediction(const Grid<Dtype> &vox,
 								   const Eigen::Matrix<Dtype,4,4> &proj)
 {
 int size = vox[0].rows();
-std::cout<<size<<std::endl;
+//std::cout<<size<<std::endl;
 	Grid<Dtype> rot_vox(size);
 	for(int c = 0; c < size; c++)
 	{
