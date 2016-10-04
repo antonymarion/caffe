@@ -240,9 +240,6 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-#ifdef CPU_ONLY
-STUB_GPU_FORWARD(HDF5DataPredLayer, Forward);
-#endif
 
 INSTANTIATE_CLASS(HDF5DataPredLayer);
 REGISTER_LAYER_CLASS(HDF5DataPred);

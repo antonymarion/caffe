@@ -80,9 +80,6 @@ void SimpleCropLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-#ifdef CPU_ONLY
-STUB_GPU(SimpleCropLayer);
-#endif
 
 INSTANTIATE_CLASS(SimpleCropLayer);
 REGISTER_LAYER_CLASS(SimpleCrop);
