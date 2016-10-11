@@ -411,6 +411,7 @@ message LayerParameter {
   optional MultiViewParameter multi_view_param = 505;
   optional UpsampleParameter upsample_param = 506;
   optional DenseFaceImageDataParameter dense_face_image_data_param = 507;
+  optional RelevanceConstraintParameter relevance_constraint_param = 508;
 
 
 }
@@ -888,6 +889,15 @@ message MultiViewParameter {
   optional FillerParameter weight_filler_unique_2 = 7;
 
   optional float lambda = 8;
+}
+
+message RelevanceConstraintParameter {
+  optional uint32 num_output = 1;
+  optional bool bias_term = 2 [default = true];
+  optional FillerParameter weight_filler = 3;
+  optional FillerParameter bias_filler = 4;
+
+  optional float lambda = 5;
 }
 
 message InputParameter {

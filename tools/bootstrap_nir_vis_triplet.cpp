@@ -21,11 +21,12 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 #include "caffe/util/rng.hpp"
+#include "caffe/util/signal_handler.h"
 
 using namespace std;
 using boost::replace_all;
 
-DEFINE_string(alpha, "400", "The threshold");
+DEFINE_string(alpha, "300", "The threshold");
 DEFINE_int32(num_pos_sample, 100, "The number of positive samples");
 DEFINE_int32(num_neg_sample, 800, "The number of negative samples");
 

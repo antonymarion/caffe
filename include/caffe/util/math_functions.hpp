@@ -12,6 +12,12 @@
 
 namespace caffe {
 
+template <typename Dtype>
+int caffe_cpu_gesvd(int M, int N, Dtype* A, Dtype*S, Dtype* U, Dtype* vt);
+
+template <typename Dtype>
+int caffe_cpu_getri(int  n , Dtype* A);
+
 // Caffe gemm provides a simpler interface to the gemm functions, with the
 // limitation that the data has to be contiguous in memory.
 template <typename Dtype>
@@ -51,6 +57,7 @@ void caffe_scal(const int N, const Dtype alpha, Dtype *X);
 
 template <typename Dtype>
 void caffe_sqr(const int N, const Dtype* a, Dtype* y);
+
 
 template <typename Dtype>
 void caffe_add(const int N, const Dtype* a, const Dtype* b, Dtype* y);

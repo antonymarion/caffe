@@ -167,17 +167,17 @@ void MultiViewLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
         N_shared_, N_shared_, K_shared_,
         (Dtype)1., W, W,
-        (Dtype)1., temp_W.mutable_cpu_data());
+        (Dtype)0., temp_W.mutable_cpu_data());
 
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
         N_unique_1_, N_unique_1_, K_unique_1_,
         (Dtype)1., V1, V1,
-        (Dtype)1., temp_V1.mutable_cpu_data());
+        (Dtype)0., temp_V1.mutable_cpu_data());
 
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
         N_unique_2_, N_unique_2_, K_unique_2_,
         (Dtype)1., V2, V2,
-        (Dtype)1., temp_V2.mutable_cpu_data());
+        (Dtype)0., temp_V2.mutable_cpu_data());
 
     const Dtype* bottom_data_1 = bottom[0]->cpu_data();
     const Dtype* bottom_data_2 = bottom[1]->cpu_data();

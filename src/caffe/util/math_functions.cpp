@@ -1,5 +1,6 @@
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
+#include <lapacke.h>
 
 #include <limits>
 
@@ -8,6 +9,60 @@
 #include "caffe/util/rng.hpp"
 
 namespace caffe {
+
+template <> 
+int caffe_cpu_gesvd<float>(int M,  int N, float* A, 
+     float* S,  float* U,   float* vt) {
+  int lda    = M;
+  int ldu    = M;
+  int ldvt   = M;
+  char jobu  ='A';
+  char jobvt ='A';
+  int info   = 0;
+  static float superb[100];
+  info = LAPACKE_sgesvd(LAPACK_ROW_MAJOR, jobu, jobvt, M, N, A, lda, S, U, ldu, vt, ldvt, superb);
+  return info;
+}
+template <>
+int caffe_cpu_gesvd<double>( int M,  int N,  double* A, 
+     double* S,  double* U,   double* vt) {
+  int lda    = M;
+  int ldu    = M;
+  int ldvt   = M;
+  char jobu  ='A';
+  char jobvt ='A';
+  int info=0;
+  static double superb[100];
+  info = LAPACKE_dgesvd(LAPACK_ROW_MAJOR, jobu, jobvt, M, N, A, lda, S, U, ldu, vt, ldvt, superb);
+  return info;
+}
+
+template <>
+int caffe_cpu_getri<float>(int  n  , float* A) {
+
+  int lda   = n;
+  int info  = 0;
+  int *ipiv = NULL;
+
+  ipiv = (int*)malloc( (n+1)*sizeof(int)); 
+  info = LAPACKE_sgetrf(LAPACK_ROW_MAJOR, n,n, A, lda, ipiv);
+  info = LAPACKE_sgetri(LAPACK_ROW_MAJOR, n, A, lda, ipiv);
+  return info;
+  free(ipiv);
+}
+
+template <>
+int caffe_cpu_getri<double>(int  n ,  double* A) {
+  int lda   =n;
+  int info  =0;
+  int *ipiv = NULL;
+
+  ipiv = (int*)malloc( (n+1)*sizeof(int));
+  info = LAPACKE_dgetrf(LAPACK_ROW_MAJOR, n,n, A, lda, ipiv);
+  info = LAPACKE_dgetri(LAPACK_ROW_MAJOR,  n,  A, lda, ipiv);
+  return info;
+  free(ipiv);
+}
 
 template<>
 void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
