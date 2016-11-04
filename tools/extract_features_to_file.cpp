@@ -201,6 +201,16 @@ int feature_extraction_pipeline(int argc, char** argv) {
           feature_blob_data = feature_blob->mutable_cpu_data() + feature_blob->offset(n);
           create_file(feature_path[n].c_str(), 'b');
           FILE* fp = fopen(feature_path[n].c_str(), "wb");
+
+          // nomalization
+          float norm = 0.0;
+          for (int d = 0; d < dim_features; ++d) {
+            norm += feature_blob_data[d] * feature_blob_data[d];
+          }
+          for (int d = 0; d < dim_features; ++d) {
+            feature_blob_data[d]  = feature_blob_data[d] / sqrt(norm);
+          }
+
           fwrite(feature_blob_data, dim_features*sizeof(Dtype), 1, fp);
           fclose(fp);
 

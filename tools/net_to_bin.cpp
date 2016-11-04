@@ -55,7 +55,7 @@ int write_layer(FILE* fp, Layer<float>* layer) {
 
   const LayerParameter& layer_param = layer->layer_param();
   int ksize = 0;
-  int stride = 0;
+  int stride = 1;
   int num_output = 0;
   int param_byte_size = 0;
   int slice_dim = 0;
@@ -71,7 +71,9 @@ int write_layer(FILE* fp, Layer<float>* layer) {
   if(!strcmp(layer->type(),"Convolution")) {
     std::cout<<"=conv="<<std::endl;
     ksize = *(layer_param.convolution_param().kernel_size().begin());
-    stride = *(layer_param.convolution_param().stride().begin());
+    if(NULL != layer_param.convolution_param().pad().begin()){
+      stride = *(layer_param.convolution_param().stride().begin());
+    }
     if(NULL != layer_param.convolution_param().pad().begin()){
       pad = *(layer_param.convolution_param().pad().begin());
     }
@@ -205,6 +207,19 @@ int write_layer(FILE* fp, Layer<float>* layer) {
       write_blob(fp, &(*(param_blobs[i])));
     }
     
+  } else if(!strcmp(layer->type(), "PReLU")) {
+    param_byte_size = 4;
+
+    for (i = 0; i < param_blobs.size(); ++i) {
+      param_byte_size += param_blobs[i]->count() * sizeof(float); // float data
+      std::cout << "      param blob " << i << " count: " << param_blobs[i]->count() << "\n";
+    }
+
+    fwrite(&param_byte_size, sizeof(int), 1, fp);
+    std::cout << "    all params byte size: " << param_byte_size << std::endl;
+    for (i = 0; i < param_blobs.size(); ++i) {
+      write_blob(fp, &(*(param_blobs[i])));
+    }
   } else{
     param_byte_size = 0;
     fwrite(&param_byte_size, sizeof(int), 1, fp);
@@ -278,24 +293,30 @@ int main(int argc, char** argv) {
     //std::cout << "  type_name: " << layer_ptr->type_name() << "\n";
 
     int layer_type = 0;
-    if(!strcmp(layer_ptr->type(),"Convolution")){
+    if(!strcmp(layer_ptr->type(), "Convolution")){
       layer_type = 4;
-    }else if(!strcmp(layer_ptr->type(),"Pooling")){
+    }else if(!strcmp(layer_ptr->type(), "Pooling")){
       layer_type = 17;
-    }else if(!strcmp(layer_ptr->type(),"InnerProduct")){
+    }else if(!strcmp(layer_ptr->type(), "InnerProduct")){
       layer_type = 14;
-    }else if(!strcmp(layer_ptr->type(),"Slice")){
+    }else if(!strcmp(layer_ptr->type(), "Softmax")) {
+      layer_type = 20;
+    }else if(!strcmp(layer_ptr->type(), "Split")) {
+      layer_type = 22;
+    }else if(!strcmp(layer_ptr->type(), "Slice")){
       layer_type = 33;
-    }else if(!strcmp(layer_ptr->type(),"Eltwise")){
+    }else if(!strcmp(layer_ptr->type(), "Eltwise")){
       layer_type = 25;
-    }else if(!strcmp(layer_ptr->type(),"ReLU")){
+    }else if(!strcmp(layer_ptr->type(), "ReLU")){
       layer_type = 18;
-    }else if(!strcmp(layer_ptr->type(),"Flatten")){
+    }else if(!strcmp(layer_ptr->type(), "Flatten")){
       layer_type = 8;
-    }else if(!strcmp(layer_ptr->type(),"BatchNorm")) { 
+    }else if(!strcmp(layer_ptr->type(), "BatchNorm")) { 
       layer_type = 139;
-    }else if(!strcmp(layer_ptr->type(),"Scale")) {   
+    }else if(!strcmp(layer_ptr->type(), "Scale")) {   
       layer_type = 142;
+    }else if(!strcmp(layer_ptr->type(), "PReLU")) {
+      layer_type = 131;
     }else{
       std::cout << "[ERROR1] Layer Type: " << layer_ptr->type() << " not supported.\n";
       return -1;

@@ -85,4 +85,7 @@ docs/dev
 
 # svn files
 .svn/*
-
+extract_features_to_file_MegaFace.cpp
+extract_features_to_file_MegaFace_mirror.cpp
+extract_weights_to_file.cpp
+bootstrap_nir_vis_triplet.cpp
