@@ -61,6 +61,7 @@ int write_layer(FILE* fp, Layer<float>* layer) {
   int slice_dim = 0;
   int operation = 0;
   int pad = 0;
+  int pool = 0;
 
   int i = 0;
 
@@ -103,17 +104,31 @@ int write_layer(FILE* fp, Layer<float>* layer) {
 
   }else if(!strcmp(layer->type(),"Pooling")){
     // std::cout<<"=pool="<<std::endl;
+    pool   = layer_param.pooling_param().pool();
     ksize  = layer_param.pooling_param().kernel_size();
     stride = layer_param.pooling_param().stride();
+    pad    = layer_param.pooling_param().pad();
 
+    if (pool == 0) {
+      std::cout << " (MAX)\n";
+    } else if (pool == 1) {
+      std::cout << " (AVE)\n";
+    } else {
+      std::cout << "\n[ERROR] pooling operation not known: " << std::endl;
+    }
+
+    std::cout << "    pool operation: " << pool << "\n";
     std::cout << "    pooling kernel size: " << ksize << "\n";
     std::cout << "    stride: " << stride << "\n";
+    std::cout << "    pad: " << pad << "\n";
 
-    param_byte_size = 2 * sizeof(int);
+    param_byte_size = 4 * sizeof(int);
     fwrite(&param_byte_size, sizeof(int), 1, fp);
 
+    fwrite(&pool, sizeof(int), 1, fp);
     fwrite(&ksize, sizeof(int), 1, fp);
     fwrite(&stride, sizeof(int), 1, fp);
+    fwrite(&pad, sizeof(int), 1, fp);
 
   }else if(!strcmp(layer->type(),"InnerProduct")){
     // std::cout<<"=fc="<<std::endl;
