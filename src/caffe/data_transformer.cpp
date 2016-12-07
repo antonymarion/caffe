@@ -1,5 +1,8 @@
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>      
+#include <opencv2/highgui/highgui.hpp>    
+#include <opencv2/imgproc/imgproc.hpp>    
 #endif  // USE_OPENCV
 
 #include <string>
@@ -59,14 +62,21 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
   CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
   const int crop_size = param_.crop_size();
+  int crop_size_h = param_.crop_size_h();
+  int crop_size_w = param_.crop_size_w();
   const Dtype scale = preserve_pixel_vals ? 1 : param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
 
+  if(crop_size) {
+    crop_size_h = crop_size;
+    crop_size_w = crop_size;
+  }
+
   CHECK_GT(img_channels, 0);
-  CHECK_GE(img_height, crop_size);
-  CHECK_GE(img_width, crop_size);
+  CHECK_GE(img_height, crop_size_h);
+  CHECK_GE(img_width, crop_size_w);
 
   Dtype* mean = NULL;
   if (has_mean_file && !preserve_pixel_vals) {
@@ -88,17 +98,17 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   int h_off = 0;
   int w_off = 0;
   cv::Mat cv_cropped_img = cv_img;
-  if (crop_size) {
-    CHECK_EQ(crop_size, height);
-    CHECK_EQ(crop_size, width);
+  if (crop_size_h && crop_size_w) {
+    CHECK_EQ(crop_size_h, height);
+    CHECK_EQ(crop_size_w, width);
     if (phase_ == TRAIN) {
-      h_off = Rand(img_height - crop_size + 1);
-      w_off = Rand(img_width - crop_size + 1);
+      h_off = Rand(img_height - crop_size_h + 1);
+      w_off = Rand(img_width - crop_size_w + 1);
     } else {
-      h_off = (img_height - crop_size) / 2;
-      w_off = (img_width - crop_size) / 2;
+      h_off = (img_height - crop_size_h) / 2;
+      w_off = (img_width - crop_size_w) / 2;
     }
-    cv::Rect roi(w_off, h_off, crop_size, crop_size);
+    cv::Rect roi(w_off, h_off, crop_size_w, crop_size_h);
     cv_cropped_img = cv_img(roi);
   } else {
     CHECK_EQ(img_height, height);
@@ -146,15 +156,22 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   const int datum_width = datum.width();
 
   const int crop_size = param_.crop_size();
+  int crop_size_h = param_.crop_size_h();
+  int crop_size_w = param_.crop_size_w();
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_uint8 = data.size() > 0;
   const bool has_mean_values = mean_values_.size() > 0;
 
+  if(crop_size) {
+    crop_size_h = crop_size;
+    crop_size_w = crop_size;
+  }
+
   CHECK_GT(datum_channels, 0);
-  CHECK_GE(datum_height, crop_size);
-  CHECK_GE(datum_width, crop_size);
+  CHECK_GE(datum_height, crop_size_h);
+  CHECK_GE(datum_width, crop_size_w);
 
   Dtype* mean = NULL;
   if (has_mean_file) {
@@ -179,16 +196,16 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 
   int h_off = 0;
   int w_off = 0;
-  if (crop_size) {
-    height = crop_size;
-    width = crop_size;
+  if (crop_size_h && crop_size_w) {
+    height = crop_size_h;
+    width = crop_size_w;
     // We only do random crop when we do training.
     if (phase_ == TRAIN) {
-      h_off = Rand(datum_height - crop_size + 1);
-      w_off = Rand(datum_width - crop_size + 1);
+      h_off = Rand(datum_height - crop_size_h + 1);
+      w_off = Rand(datum_width - crop_size_w + 1);
     } else {
-      h_off = (datum_height - crop_size) / 2;
-      w_off = (datum_width - crop_size) / 2;
+      h_off = (datum_height - crop_size_h) / 2;
+      w_off = (datum_width - crop_size_w) / 2;
     }
   }
 
@@ -253,9 +270,16 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   }
 
   const int crop_size = param_.crop_size();
+  int crop_size_h = param_.crop_size_h();
+  int crop_size_w = param_.crop_size_w();
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
   const int datum_width = datum.width();
+
+  if(crop_size) {
+    crop_size_h = crop_size;
+    crop_size_w = crop_size;
+  }
 
   // Check dimensions.
   const int channels = transformed_blob->channels();
@@ -268,9 +292,9 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   CHECK_LE(width, datum_width);
   CHECK_GE(num, 1);
 
-  if (crop_size) {
-    CHECK_EQ(crop_size, height);
-    CHECK_EQ(crop_size, width);
+  if (crop_size_h && crop_size_w) {
+    CHECK_EQ(crop_size_h, height);
+    CHECK_EQ(crop_size_w, width);
   } else {
     CHECK_EQ(datum_height, height);
     CHECK_EQ(datum_width, width);
@@ -557,19 +581,26 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
 #endif  // USE_OPENCV
   }
   const int crop_size = param_.crop_size();
+  int crop_size_w = param_.crop_size_w();
+  int crop_size_h = param_.crop_size_h();
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
   const int datum_width = datum.width();
+
+  if(crop_size){
+    crop_size_w = crop_size;
+    crop_size_h = crop_size;
+  }
   // Check dimensions.
   CHECK_GT(datum_channels, 0);
-  CHECK_GE(datum_height, crop_size);
-  CHECK_GE(datum_width, crop_size);
+  CHECK_GE(datum_height, crop_size_h);
+  CHECK_GE(datum_width, crop_size_w);
   // Build BlobShape.
   vector<int> shape(4);
   shape[0] = 1;
   shape[1] = datum_channels;
-  shape[2] = (crop_size)? crop_size: datum_height;
-  shape[3] = (crop_size)? crop_size: datum_width;
+  shape[2] = (crop_size_h)? crop_size_h: datum_height;
+  shape[3] = (crop_size_w)? crop_size_w: datum_width;
   return shape;
 }
 
@@ -589,19 +620,27 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
   const int crop_size = param_.crop_size();
+  int crop_size_w = param_.crop_size_w();
+  int crop_size_h = param_.crop_size_h();
   const int img_channels = cv_img.channels();
   const int img_height = cv_img.rows;
   const int img_width = cv_img.cols;
+
+  if(crop_size){
+    crop_size_w = crop_size;
+    crop_size_h = crop_size;
+  }
+
   // Check dimensions.
   CHECK_GT(img_channels, 0);
-  CHECK_GE(img_height, crop_size);
-  CHECK_GE(img_width, crop_size);
+  CHECK_GE(img_height, crop_size_h);
+  CHECK_GE(img_width, crop_size_w);
   // Build BlobShape.
   vector<int> shape(4);
   shape[0] = 1;
   shape[1] = img_channels;
-  shape[2] = (crop_size)? crop_size: img_height;
-  shape[3] = (crop_size)? crop_size: img_width;
+  shape[2] = (crop_size_h)? crop_size_h: img_height;
+  shape[3] = (crop_size_w)? crop_size_w: img_width;
   return shape;
 }
 
@@ -621,7 +660,7 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
-      (phase_ == TRAIN && param_.crop_size());
+      (phase_ == TRAIN && (param_.crop_size()|| (param_.crop_size_w()&&param_.crop_size_h())));
   if (needs_rand) {
     const unsigned int rng_seed = caffe_rng_rand();
     rng_.reset(new Caffe::RNG(rng_seed));
