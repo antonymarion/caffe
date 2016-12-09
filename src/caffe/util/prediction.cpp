@@ -159,10 +159,13 @@ Eigen::Matrix<Dtype,3,1> rotate_coords(Dtype x, Dtype y, Dtype z,
 		int output_width = pred->width();
 		int output_height = pred->height();
 		int size = output_width;
-		
+
 		Grid<Dtype> grid(size);
 		const Dtype* output_data=pred->cpu_data();
-		output_data+=output_width * output_height; //take only channel 2 (prob inside)
+		//chenger methode selon taille du blob  (unfold ou 3d)
+		if (output_height == size*size) //if pred from a net, skip first classif layer
+			output_data+=output_width * output_height;
+
 		for(int c = 0; c < size; c++)
 		{
 			Slice<Dtype> channel(size, size);

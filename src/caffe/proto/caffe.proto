@@ -772,6 +772,7 @@ message HDF5DataPredParameter {
   
   optional string deploy_file = 4;
   optional string trained_file = 5;
+  optional float gt_prop = 6 [default = 0.0];
 }
 
 message HDF5OutputParameter {
