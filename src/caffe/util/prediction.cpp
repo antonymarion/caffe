@@ -162,7 +162,7 @@ Eigen::Matrix<Dtype,3,1> rotate_coords(Dtype x, Dtype y, Dtype z,
 		
 		Grid<Dtype> grid(size);
 		const Dtype* output_data=pred->cpu_data();
-		output_data+=output_width * output_height;
+		output_data+=output_width * output_height; //take only channel 2 (prob inside)
 		for(int c = 0; c < size; c++)
 		{
 			Slice<Dtype> channel(size, size);
@@ -178,22 +178,12 @@ Eigen::Matrix<Dtype,3,1> rotate_coords(Dtype x, Dtype y, Dtype z,
 		//compute model
 		Eigen::Matrix<Dtype,4,4> model;
 		model = new_view*model_old.inverse();
-model=model.inverse();
-// std::cout<<model_old<<std::endl<<std::endl;
-// std::cout<<new_view<<std::endl<<std::endl;
-// std::cout<<model<<std::endl<<std::endl;
-// std::cout<<view<<std::endl<<std::endl;
-// std::cout<<proj<<std::endl<<std::endl;
+		model=model.inverse();
+
 		//rotate
 		Grid<Dtype> gt12 = rotate_voxels_prediction<Dtype>(grid,  model, view, proj);
 		//put into output
-// cv::Mat pred1 = iso_surface(grid, 0.3);
-//   	cv::namedWindow( "pred1", CV_WINDOW_NORMAL );
-// 	cv::imshow("pred1",pred1);
-// cv::Mat pred2 = iso_surface(gt12, 0.3);
-//   	cv::namedWindow( "pred2", CV_WINDOW_NORMAL );
-// 	cv::imshow("pred2",pred2);
-// 	cv::waitKey(0);
+
 		for(int c = 0; c < size; c++)
 		{
 			std::memcpy(output, gt12[c].data() ,size * size * sizeof(Dtype));
