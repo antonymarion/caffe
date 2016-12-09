@@ -181,12 +181,13 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         std::random_shuffle(data_permutation_.begin(), data_permutation_.end());
     }
 	//donner donnees
-    for (int j = 0; j < this->layer_param_.top_size()-1; ++j) { //WARNING -1
+    for (int j = 0; j < this->layer_param_.top_size()-1; ++j) { //WARNING -1 to avoid last blob (pred)
       int data_dim = top[j]->count() / top[j]->shape(0);
       caffe_copy(data_dim,
           &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
             * data_dim], &top[j]->mutable_cpu_data()[i * data_dim]);
     }
+	
 	//WARNING retrieve id_view (%8 ?) and choose first view (random puis /8 + idv1)
 	int idv2 = data_permutation_[current_row_];
 	int v2 = idv2 % 8;
@@ -205,6 +206,7 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 	}
 	int idv1 = (idv2/8)*8+v1; //id (in dbase) of the first view to use
 
+	//TODO take GT instead of going through net
 	//WARNING faire prediction
 	Blob<Dtype>* input_layer = pred_net_.input_blobs()[0];
 	int data_dim = top[0]->count() / top[0]->shape(0);
@@ -213,23 +215,9 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 			   input_layer->mutable_cpu_data());
 	
 	pred_net_.Forward();
-
-	// cv::Mat pred = cv::Mat(10*64,64,CV_64FC1);//, &pred_net_.output_blobs()[0]->mutable_cpu_data()[64*30]);
-	// //pred *= 255;
-	// for(int r = 0; r < 64*10; r++)
-	// {
-	// 	for(int c = 0; c < 64; c++)
-	// 	{
-	// 		pred.at<double>(r,c) = pred_net_.output_blobs()[0]->data_at(0,0,64*25+r, c);
-	// 	}
-
-	// }
-
-	// cv::namedWindow( "pred", CV_WINDOW_NORMAL );
-	// cv::imshow("pred",pred);
-	// cv::waitKey(0);
 	int last_blob = this->layer_param_.top_size()-1;
 	//WARNING rotate pred and put it in network
+	//TODO change entry to GT
 	rotate_blobs(pred_net_.output_blobs()[0],
 				 &viewpoint_->cpu_data()[idv1 * 16],
 				 &viewpoint_->cpu_data()[idv2 * 16],

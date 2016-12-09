@@ -159,9 +159,13 @@ Eigen::Matrix<Dtype,3,1> rotate_coords(Dtype x, Dtype y, Dtype z,
 		int output_width = pred->width();
 		int output_height = pred->height();
 		int size = output_width;
-		
+
 		Grid<Dtype> grid(size);
 		const Dtype* output_data=pred->cpu_data();
+		//chenger methode selon taille du blob  (unfold ou 3d)
+		if (output_height == size*size) //if pred from a net, skip first classif layer
+			output_data+=output_width * output_height;
+
 		output_data+=output_width * output_height;
 		for(int c = 0; c < size; c++)
 		{
@@ -178,7 +182,7 @@ Eigen::Matrix<Dtype,3,1> rotate_coords(Dtype x, Dtype y, Dtype z,
 		//compute model
 		Eigen::Matrix<Dtype,4,4> model;
 		model = new_view*model_old.inverse();
-model=model.inverse();
+		model=model.inverse();
 // std::cout<<model_old<<std::endl<<std::endl;
 // std::cout<<new_view<<std::endl<<std::endl;
 // std::cout<<model<<std::endl<<std::endl;
