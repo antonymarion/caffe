@@ -2,15 +2,17 @@
 
 #include <vector>
 #include <Eigen/Core>
-// #include <cv.h>
-// #include <highgui.h>
+#include <cv.h>
+#include <highgui.h>
 
 namespace caffe {
 	
 template <typename Dtype>
 Grid<Dtype> rotate_voxels_prediction(const Grid<Dtype> &vox,
-								   const Eigen::Matrix<Dtype,4,4> &model,
-								   const Eigen::Matrix<Dtype,4,4> &view,
+								   const Eigen::Matrix<Dtype,4,4> &model1,
+								   const Eigen::Matrix<Dtype,4,4> &view1,
+								   const Eigen::Matrix<Dtype,4,4> &model2,
+								   const Eigen::Matrix<Dtype,4,4> &view2,
 								   const Eigen::Matrix<Dtype,4,4> &proj)
 {
 int size = vox[0].rows();
@@ -23,7 +25,7 @@ int size = vox[0].rows();
 		{
 			for(int j = 0; j < size; j++)
 			{
-				rot_vox[c](i,j) = rotated_proba_value<Dtype>(vox, model, view, proj, c, i, j);
+				rot_vox[c](i,j) = rotated_proba_value<Dtype>(vox, model1, view1,model2, view2, proj, c, i, j);
 			}
 		}
 	}
@@ -32,10 +34,12 @@ int size = vox[0].rows();
 
 	template <typename Dtype>
 Dtype rotated_proba_value(const Grid<Dtype> &vox,
-						const Eigen::Matrix<Dtype,4,4> &model,
-						const Eigen::Matrix<Dtype,4,4> &view,
-						const Eigen::Matrix<Dtype,4,4> &proj,
-						Dtype z,Dtype x, Dtype y)
+						  const Eigen::Matrix<Dtype,4,4> &model1,
+						  const Eigen::Matrix<Dtype,4,4> &view1,
+						  const Eigen::Matrix<Dtype,4,4> &model2,
+						  const Eigen::Matrix<Dtype,4,4> &view2,
+						  const Eigen::Matrix<Dtype,4,4> &proj,
+						  Dtype z,Dtype x, Dtype y)
 {
 	int size = vox[0].rows();
 	//pass coord in the unit cube and rotate it
@@ -44,7 +48,7 @@ Dtype rotated_proba_value(const Grid<Dtype> &vox,
 	// std::cout<<depth<<std::endl;
 	Eigen::Matrix<Dtype,3,1> rotated =
 		rotate_coords<Dtype>((y+0.5)/(size), 1-(x+0.5)/(size),
-					  depth, model, view, proj);
+					  depth, model1, view1,model2, view2, proj);
 	// std::cout<<rotated<<std::endl;
 
 	int new_i = (int)std::floor((1-rotated.y())*(size));
@@ -77,15 +81,16 @@ int depth_to_z(Dtype depth, int size, const Eigen::Matrix<Dtype,4,4> &proj)
 
 	template <typename Dtype>
 Eigen::Matrix<Dtype,3,1> rotate_coords(Dtype x, Dtype y, Dtype z,
-							  const Eigen::Matrix<Dtype,4,4> &model, 
-							  const Eigen::Matrix<Dtype,4,4> &view,
+						  const Eigen::Matrix<Dtype,4,4> &model1,
+						  const Eigen::Matrix<Dtype,4,4> &view1,
+						  const Eigen::Matrix<Dtype,4,4> &model2,
+						  const Eigen::Matrix<Dtype,4,4> &view2,
 							  const Eigen::Matrix<Dtype,4,4> &proj)
 {
-	Eigen::Matrix<Dtype,4,4> PV = proj*view;
 	Eigen::Matrix<Dtype,4,1> NDC(x*2-1, y*2-1, z*2-1, 1.0);
-	Eigen::Matrix<Dtype,4,1> position = PV.inverse()*NDC;
+	Eigen::Matrix<Dtype,4,1> position = (proj*view2*model2).inverse()*NDC;
 	//rotate
-	Eigen::Matrix<Dtype,4,1> coords = proj * view * model * position;
+	Eigen::Matrix<Dtype,4,1> coords = proj * view1 * model1 * position;
 	coords /= coords.w();
 	//goes back into (0,1)
 	coords = coords.array()/2+0.5;
@@ -98,59 +103,60 @@ Eigen::Matrix<Dtype,3,1> rotate_coords(Dtype x, Dtype y, Dtype z,
 
 
 
-// float interpolate( float val, float y0, float x0, float y1, float x1 ) {
-//     return (val-x0)*(y1-y0)/(x1-x0) + y0;
-// }
+float interpolate( float val, float y0, float x0, float y1, float x1 ) {
+    return (val-x0)*(y1-y0)/(x1-x0) + y0;
+}
 
-// float base( float val ) {
-//     if ( val <= -0.75 ) return 0;
-//     else if ( val <= -0.25 ) return interpolate( val, 0.0, -0.75, 1.0, -0.25 );
-//     else if ( val <= 0.25 ) return 1.0;
-//     else if ( val <= 0.75 ) return interpolate( val, 1.0, 0.25, 0.0, 0.75 );
-//     else return 0.0;
-// }
+float base( float val ) {
+    if ( val <= -0.75 ) return 0;
+    else if ( val <= -0.25 ) return interpolate( val, 0.0, -0.75, 1.0, -0.25 );
+    else if ( val <= 0.25 ) return 1.0;
+    else if ( val <= 0.75 ) return interpolate( val, 1.0, 0.25, 0.0, 0.75 );
+    else return 0.0;
+}
 
-// cv::Vec3b jetColor(float gray)
-// {
-// 	return cv::Vec3b(base( gray + 0.5 )*255,base( gray )*255, base( gray - 0.5 )*255);
-// }
+cv::Vec3b jetColor(float gray)
+{
+	return cv::Vec3b(base( gray + 0.5 )*255,base( gray )*255, base( gray - 0.5 )*255);
+}
 
-// 	template <typename Dtype>
-// cv::Mat iso_surface(const  Grid<Dtype> &vox,
-// 					float threshold)
-// {
-// 	int size = vox[0].rows();
-// 	cv::Mat img(size, size,CV_8UC3);
-// 	for(int i = 0; i <size; i++)
-// 	{
-// 		for(int j = 0; j < size; j++)
-// 		{
-// 			int c_depth = -1;
-// 			for(int c = 0; c < size; c++)
-// 			{
-// float val_depth= vox[c](i,j);
-// 				if (val_depth > threshold)
-// 				{
-// 					c_depth = c;
-// 					break;
-// 				}
-// 			}
-// 			float depth = (c_depth+0.5)/(size);
-// 			cv::Vec3b color = jetColor(depth*2-1);
-// 			img.at<cv::Vec3b>(i, j)=color;
-// 		}
-// 	}
+	template <typename Dtype>
+cv::Mat iso_surface(const  Grid<Dtype> &vox,
+					float threshold)
+{
+	int size = vox[0].rows();
+	cv::Mat img(size, size,CV_8UC3);
+	for(int i = 0; i <size; i++)
+	{
+		for(int j = 0; j < size; j++)
+		{
+			int c_depth = -1;
+			for(int c = 0; c < size; c++)
+			{
+float val_depth= vox[c](i,j);
+				if (val_depth > threshold)
+				{
+					c_depth = c;
+					break;
+				}
+			}
+			float depth = (c_depth+0.5)/(size);
+			cv::Vec3b color = jetColor(depth*2-1);
+			img.at<cv::Vec3b>(i, j)=color;
+		}
+	}
 
-// 	return img;
-// }
+	return img;
+}
 	
 
 //takes only blobs and do the work (go to eigen and rotate) AVOID COPYING!
 	template <typename Dtype>
 	void rotate_blobs(const Blob<Dtype> * pred,
-					  const Dtype* viewpoint1,
-					  const Dtype* viewpoint2,
-					  const Dtype* view_mat,
+					  const Dtype* model1,
+					  const Dtype* view_mat1,
+					  const Dtype* model2,
+					  const Dtype* view_mat2,
 					  const Dtype* proj_mat,
 					  Dtype * output)  //WARNING a voir
 	{
@@ -159,6 +165,7 @@ Eigen::Matrix<Dtype,3,1> rotate_coords(Dtype x, Dtype y, Dtype z,
 		int output_width = pred->width();
 		int output_height = pred->height();
 		int size = output_width;
+		
 
 		Grid<Dtype> grid(size);
 		const Dtype* output_data=pred->cpu_data();
@@ -174,17 +181,26 @@ Eigen::Matrix<Dtype,3,1> rotate_coords(Dtype x, Dtype y, Dtype z,
 			grid[c] = channel;
 		}
 		//transform viewpoint, view_mat, proj_mat into eigen matrices
-		Eigen::Map<const Eigen::Matrix<Dtype,4,4> > view(view_mat);
+		Eigen::Map<const Eigen::Matrix<Dtype,4,4> > view1(view_mat1);
+		Eigen::Map<const Eigen::Matrix<Dtype,4,4> > view2(view_mat2);
 		Eigen::Map<const Eigen::Matrix<Dtype,4,4> > proj(proj_mat);
-		Eigen::Map<const Eigen::Matrix<Dtype,4,4> > model_old(viewpoint1);
-		Eigen::Map<const Eigen::Matrix<Dtype,4,4> > new_view(viewpoint2);
+		Eigen::Map<const Eigen::Matrix<Dtype,4,4> > mv1(model1);
+		Eigen::Map<const Eigen::Matrix<Dtype,4,4> > mv2(model2);
 		//compute model
-		Eigen::Matrix<Dtype,4,4> model;
-		model = new_view*model_old.inverse();
-		model=model.inverse();
+		// Eigen::Matrix<Dtype,4,4> model;
+		// model = new_view*model_old.inverse();
+		// model=model.inverse();
 
 		//rotate
-		Grid<Dtype> gt12 = rotate_voxels_prediction<Dtype>(grid,  model, view, proj);
+		Grid<Dtype> gt12 = rotate_voxels_prediction<Dtype>(grid, mv1, view1, mv2, view2, proj);
+		// std::cout<<"rotate ok"<<std::endl;
+		// cv::Mat pred1 = iso_surface(grid, 0.3);
+		// cv::namedWindow( "pred1", CV_WINDOW_NORMAL );
+		// cv::imshow("pred1",pred1);
+		// cv::Mat pred2 = iso_surface(gt12, 0.3);
+		// cv::namedWindow( "pred2", CV_WINDOW_NORMAL );
+		// cv::imshow("pred2",pred2);
+		// cv::waitKey(0);
 		//put into output
 
 		for(int c = 0; c < size; c++)
@@ -194,6 +210,6 @@ Eigen::Matrix<Dtype,3,1> rotate_coords(Dtype x, Dtype y, Dtype z,
 		}
 	}
 
-	template void rotate_blobs(const Blob<double> * pred, const double* viewpoint1, const double* viewpoint2, const double* view_mat, const double* proj_mat, double * output);
-	template void rotate_blobs(const Blob<float> * pred, const float* viewpoint1, const float* viewpoint2, const float* view_mat, const float* proj_mat, float * output);
+	template void rotate_blobs(const Blob<double> * pred, const double* model1, const double* model2, const double* view_mat1, const double* view_mat2,  const double* proj_mat, double * output);
+	template void rotate_blobs(const Blob<float> * pred, const float* model1, const float* model2, const float* view_mat1, const float* view_mat2,  const float* proj_mat, float * output);
 }
