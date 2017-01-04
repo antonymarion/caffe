@@ -196,11 +196,11 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 		//take GT
 		//TODO take GT instead of going through net
 		//WARNING faire prediction
-		//std::cout<<"taking GT"<<std::endl;
-		int data_dim = top[last_blob]->count() / top[last_blob]->shape(0);
-		caffe_copy(data_dim,
-				   &hdf_blobs_[last_blob-1]->cpu_data()[data_permutation_[current_row_]  * data_dim],
-				   &top[last_blob]->mutable_cpu_data()[i * data_dim]);
+	  //std::cout<<"taking GT"<<std::endl;
+	  int data_dim = top[last_blob]->count() / top[last_blob]->shape(0);
+	  caffe_copy(data_dim,
+		     &hdf_blobs_[last_blob-1]->cpu_data()[data_permutation_[current_row_]  * data_dim],
+		     &top[last_blob]->mutable_cpu_data()[i * data_dim]);
 
 	} else
 	{
@@ -209,17 +209,7 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 		int v2 = idv2 % 8;
 		bool is_top = v2 > 3; //true if idv1 between 4 and 7
 		int dir = distribution_2nd_view(generator_);
-		int v1 = v2;
-		if(dir != 0)
-		{
-			if (is_top) v1 -= 4;
-			v1 = mod(v1 + dir,4);
-			if (is_top) v1 += 4;
-		} else
-		{
-			if (is_top) v1 -= 4;
-			else v1 += 4;
-		}
+		int v1 = (v2+dir) % 8;
 		int idv1 = (idv2/8)*8+v1; //id (in dbase) of the first view to use
 		//std::cout<<" idv1 : " <<idv1<<", idv2 : " <<idv2<<std::endl;
 		
