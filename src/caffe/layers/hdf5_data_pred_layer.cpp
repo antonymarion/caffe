@@ -206,10 +206,12 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 	{
 		//WARNING retrieve id_view (%8 ?) and choose first view (random puis /8 + idv1)
 		int idv2 = data_permutation_[current_row_];
-		int v2 = idv2 % 8;
-		int dir = distribution_2nd_view(generator_);
-		int v1 = (v2+dir) % 8;
-		int idv1 = (idv2/8)*8+v1; //id (in dbase) of the first view to use
+		int v2 = idv2 % 13;
+		//choose 1st view in the 8 first ones
+		int v1 = distribution_2nd_view(generator_);
+		while(v1==v2)
+			v1 = distribution_2nd_view(generator_);
+		int idv1 = (idv2/13)*13+v1; //id (in dbase) of the first view to use
 		// std::cout<<"obj "<<idv2/8<<" v1 : " <<v1<<", v2 : " <<v2<<std::endl;
 		// std::cout<<" idv1 : " <<idv1<<", idv2 : " <<idv2<<std::endl;
 		
@@ -226,6 +228,7 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 		// cv::Mat im2 = cv::Mat(256,256,CV_32FC1, &hdf_blobs_[0]->mutable_cpu_data()[idv2 * data_dim]);
 		// cv::namedWindow( "sk2", CV_WINDOW_NORMAL );
 		// cv::imshow("sk2",im2);
+		// cv::waitKey();
 
 		//WARNING rotate pred and put it in network
 		data_dim = top[last_blob]->count() / top[last_blob]->shape(0);

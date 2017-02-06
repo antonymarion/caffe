@@ -63,8 +63,8 @@ Dtype rotated_proba_value(const Grid<Dtype> &vox,
 	template <typename Dtype>
 	Dtype z_to_depth(int z, int size, const Eigen::Matrix<Dtype,4,4> &proj)
 {
-	z=z*0.8+8;
-	Dtype depth = -(z+0.5)/size*5.5-2.5;
+	Dtype zf=z*0.8+(size/16);
+	Dtype depth = -(zf+0.5)/size*5.5-2.5;
 	depth = -proj(2,3)/depth-proj(2,2);
 	depth=depth/2+0.5;
 	return depth;
@@ -76,7 +76,7 @@ int depth_to_z(Dtype depth, int size, const Eigen::Matrix<Dtype,4,4> &proj)
 	depth = depth * 2 - 1;
 	depth = -proj(2,3)/(depth+proj(2,2));
 	Dtype z = (-(depth+2.5)/5.5)*size-0.5;
-	return (int)std::floor((z-8)/0.8);
+	return (int)std::round((z-(size/16))/0.8);
 }
 
 	template <typename Dtype>

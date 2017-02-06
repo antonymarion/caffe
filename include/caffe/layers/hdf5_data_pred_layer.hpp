@@ -26,7 +26,7 @@ template <typename Dtype>
 class HDF5DataPredLayer : public Layer<Dtype> {
  public:
   explicit HDF5DataPredLayer(const LayerParameter& param)
-    : Layer<Dtype>(param), pred_net_(param.hdf5_data_pred_param().deploy_file(), caffe::TEST), generator_(time(NULL)), distribution_2nd_view(1,7) , distribution_gt(0,1){}
+    : Layer<Dtype>(param), pred_net_(param.hdf5_data_pred_param().deploy_file(), caffe::TEST), generator_(time(NULL)), distribution_2nd_view(0,7) , distribution_gt(0,1){}
   virtual ~HDF5DataPredLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
