@@ -181,7 +181,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
       for (int y = 0; y < net_height; ++y){
         for (int x = 0; x < net_width; ++x) {
           top_data[cnt * data_dim + y * cv_img.cols + x] = 
-              Dtype(cv_img.at<uchar>(y, x) / Dtype(255));
+              Dtype(cv_img.at<uchar>(y, x) / Dtype(256));
         } // for (int y = 0; y < cv_img.rows; ++y) 
       } // for (int x = 0; x < cv_img.cols; ++x)
 

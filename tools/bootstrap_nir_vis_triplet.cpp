@@ -26,7 +26,7 @@
 using namespace std;
 using boost::replace_all;
 
-DEFINE_string(alpha, "300", "The threshold");
+DEFINE_string(alpha, "400", "The threshold");
 DEFINE_int32(num_pos_sample, 100, "The number of positive samples");
 DEFINE_int32(num_neg_sample, 800, "The number of negative samples");
 
@@ -127,7 +127,7 @@ int LoadFeatures(const string root_path, vector<pair<string, int> > &list, float
         string filename = root_path + list[i].first;
         replace_all(filename, ".jpg", ".feat");
         replace_all(filename, ".bmp", ".feat");
-
+        
         features[i] = (float *) read_file_buffer(filename, feat_size);        
 
         if(i % 10000 == 0) {

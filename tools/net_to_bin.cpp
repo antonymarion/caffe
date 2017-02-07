@@ -72,7 +72,7 @@ int write_layer(FILE* fp, Layer<float>* layer) {
   if(!strcmp(layer->type(),"Convolution")) {
     std::cout<<"=conv="<<std::endl;
     ksize = *(layer_param.convolution_param().kernel_size().begin());
-    if(NULL != layer_param.convolution_param().pad().begin()){
+    if(NULL != layer_param.convolution_param().stride().begin()){
       stride = *(layer_param.convolution_param().stride().begin());
     }
     if(NULL != layer_param.convolution_param().pad().begin()){

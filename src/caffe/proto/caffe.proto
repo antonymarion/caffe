@@ -412,8 +412,7 @@ message LayerParameter {
   optional UpsampleParameter upsample_param = 506;
   optional DenseFaceImageDataParameter dense_face_image_data_param = 507;
   optional RelevanceConstraintParameter relevance_constraint_param = 508;
-
-
+  optional CenterDistanceParameter center_distance_param = 509;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1503,3 +1502,8 @@ message TripletLossParameter {
   optional float margin = 1 [default = 1.0]; 
 }
 
+message CenterDistanceParameter {
+  optional uint32 num_output = 1;
+  optional FillerParameter center_filler = 2;
+  optional int32 axis = 3 [default = 1];
+}
