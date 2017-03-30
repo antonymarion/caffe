@@ -203,13 +203,13 @@ int feature_extraction_pipeline(int argc, char** argv) {
           FILE* fp = fopen(feature_path[n].c_str(), "wb");
 
           // nomalization
-          float norm = 0.0;
-          for (int d = 0; d < dim_features; ++d) {
-            norm += feature_blob_data[d] * feature_blob_data[d];
-          }
-          for (int d = 0; d < dim_features; ++d) {
-            feature_blob_data[d]  = feature_blob_data[d] / sqrt(norm);
-          }
+          // float norm = 0.0;
+          // for (int d = 0; d < dim_features; ++d) {
+          //   norm += feature_blob_data[d] * feature_blob_data[d];
+          // }
+          // for (int d = 0; d < dim_features; ++d) {
+          //   feature_blob_data[d]  = feature_blob_data[d] / sqrt(norm);
+          // }
 
           fwrite(feature_blob_data, dim_features*sizeof(Dtype), 1, fp);
           fclose(fp);
