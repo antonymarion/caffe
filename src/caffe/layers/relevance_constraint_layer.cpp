@@ -51,7 +51,7 @@ void RelevanceConstraintLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bot
 
     this->param_propagate_down_.resize(this->blobs_.size(), true);
 
-    lambda_ = this->layer_param_.multi_view_param().lambda();
+    lambda_ = this->layer_param_.relevance_constraint_param().lambda();
 
     // inverse of matrix gamma
     vector<int> inverse_gamma_shape(2);

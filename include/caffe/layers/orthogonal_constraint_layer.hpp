@@ -1,5 +1,5 @@
-#ifndef CAFFE_RELEVANCE_CONSTRAINT_LAYER_HPP_
-#define CAFFE_RELEVANCE_CONSTRAINT_LAYER_HPP_
+#ifndef CAFFE_ORTHOGONAL_CONSTRAINT_LAYER_HPP_
+#define CAFFE_ORTHOGONAL_CONSTRAINT_LAYER_HPP_
 
 #include <vector>
 
@@ -16,18 +16,18 @@ namespace caffe {
  * TODO(dox): thorough documentation for Forward, Backward, and proto params.
  */
 template <typename Dtype>
-class RelevanceConstraintLayer : public Layer<Dtype> {
+class OrthogonalConstraintLayer : public Layer<Dtype> {
  public:
-  explicit RelevanceConstraintLayer(const LayerParameter& param)
+  explicit OrthogonalConstraintLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline const char* type() const { return "RelevanceConstraint"; }
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline const char* type() const { return "OrthogonalConstraint"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -43,12 +43,11 @@ class RelevanceConstraintLayer : public Layer<Dtype> {
   int K_;
   int N_;
   bool bias_term_;
-  Blob<Dtype> bias_multiplier_1_, bias_multiplier_2_;
+  Blob<Dtype> bias_multiplier_;
 
-  float lambda_;
-  Blob<Dtype> inverse_gamma_;
-  Blob<Dtype> WW_1, WW_2, WW_sum;
-  Blob<Dtype> U, S, VT, diag_S;
+  Dtype lambda_;
+  Blob<Dtype> WW_;
+  Blob<Dtype> W_gradient_;
 };
 
 }  // namespace caffe
