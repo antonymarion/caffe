@@ -214,6 +214,74 @@ float val_depth= vox[c](i,j);
 		}
 	}
 
+	template <typename Dtype>
+	Grid<Dtype> unpack_pred_in_image( cv::Mat &image, int grid_rows, int grid_cols)
+{
+	//assert(grid_rows*grid_cols == grid.size()/4);
+	int nrows = image.rows/grid_rows;
+	int ncols = image.cols/grid_cols;
+	int nchannels = nrows/4;//std::min<int>(grid.size(), grid_rows*grid_cols);
+	//cv::Mat img(nrows*grid_rows, ncols*grid_cols,CV_8UC4);
+	//std::cout<<"start to unpack\n";
+	std::vector<cv::Mat> imgs;
+	int from_to[4*2] = {0,2,1,1,2,0,3,3};
+	std::vector<cv::Mat> img;
+	img.push_back(image);
+	// std::cout<<img[0].type()<<std::endl;
+	//std::cout<<img[0].channels()<<std::endl;
+	for(int i = 0; i<4; i++)
+	{
+		imgs.push_back(cv::Mat(image.size(),CV_8UC1));
+	}
+	cv::mixChannels(img,imgs,from_to,4);
+	// for(int i = 0; i<4; i++)
+	// 	imShow::show(imgs[i],"img"+std::to_string(i));
+	// imShow::wait();
+	// cv::namedWindow("grid");
+	
+	Grid<Dtype> grid(nrows);
+	for(int c = 0; c<nchannels; c++)
+	{
+		int i_cell = c/grid_cols*nrows;
+		int j_cell = c%grid_cols*ncols;
+		//std::cout<<"c = "<<c<<", icell = "<<i_cell<<", jcell = "<<j_cell<<std::endl;
+		for(int i = 0; i<4; i++)
+		{
+			int channel = c*4 + i;
+			//std::cout<<"copying channel "<<channel<<std::endl;
+			cv::Mat part = imgs[i](cv::Rect(j_cell,i_cell,nrows,ncols)),partF;
+			part.convertTo(partF, CV_type<Dtype>(), 1.0/255);
+
+			Eigen::Map<Slice<Dtype> > chan(reinterpret_cast<Dtype*>(partF.data),nrows,ncols);
+			grid[channel] =chan;
+		
+		}
+	}
+	// cv::imshow("grid",pred_to_grid(grid,8,8));
+	// cv::waitKey(0);
+	return grid;
+}
+
+template <typename Dtype>
+int CV_type()
+{
+	return 0;
+}
+	template <>
+	int CV_type<float>()
+	{
+		return CV_32F;
+	}
+	template <>
+	int CV_type<double>()
+	{
+		return CV_64F;
+	}
+
+	template 	Grid<float> unpack_pred_in_image( cv::Mat &image, int grid_rows, int grid_cols);
+	template 	Grid<double> unpack_pred_in_image( cv::Mat &image, int grid_rows, int grid_cols);
+
+	
 	template void rotate_blobs(const Blob<double> * pred, const double* model1, const double* model2, const double* view_mat1, const double* view_mat2,  const double* proj_mat, double * output);
 	template void rotate_blobs(const Blob<float> * pred, const float* model1, const float* model2, const float* view_mat1, const float* view_mat2,  const float* proj_mat, float * output);
 }
