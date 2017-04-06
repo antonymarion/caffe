@@ -51,6 +51,12 @@ namespace caffe {
 					  const Dtype* view_mat2,
 					  const Dtype* proj_mat,
 					  Dtype * output) ;
+
+		template <typename Dtype>
+		Grid<Dtype> unpack_pred_in_image( cv::Mat &image, int grid_rows, int grid_cols);
+	template <typename Dtype>
+	int CV_type();
+
 	
 }
 
