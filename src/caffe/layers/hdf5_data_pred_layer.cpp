@@ -56,6 +56,13 @@ void HDF5DataPredLayer<Dtype>::LoadHDF5FileData(const char* filename) {
         MIN_DATA_DIM, MAX_DATA_DIM, view_mat_.get());
   hdf5_load_nd_dataset(file_id, "proj_mat",
         MIN_DATA_DIM, MAX_DATA_DIM, proj_mat_.get());
+  //WARNING load data single view
+  data_single_ = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
+  view_mat_single_ = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
+  hdf5_load_nd_dataset(file_id, "data_single",
+        MIN_DATA_DIM, MAX_DATA_DIM, data_single_.get());
+  hdf5_load_nd_dataset(file_id, "view_mat_single",
+        MIN_DATA_DIM, MAX_DATA_DIM, view_mat_single_.get());
 
   herr_t status = H5Fclose(file_id);
   CHECK_GE(status, 0) << "Failed to close HDF5 file: " << filename;
@@ -194,7 +201,6 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 	if(choice<this->layer_param_.hdf5_data_pred_param().gt_prop())
 	{
 		//take GT
-		//TODO take GT instead of going through net
 		//WARNING faire prediction
 	  //std::cout<<"taking GT"<<std::endl;
 	  int data_dim = top[last_blob]->count() / top[last_blob]->shape(0);
@@ -207,28 +213,29 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 		//WARNING retrieve id_view (%8 ?) and choose first view (random puis /8 + idv1)
 		int idv2 = data_permutation_[current_row_];
 		int v2 = idv2 % 13;
+		int id_obj = idv2/13;
 		//choose 1st view in the 8 first ones
 		int v1 = distribution_2nd_view(generator_);
 		while(v1==v2)
 			v1 = distribution_2nd_view(generator_);
-		int idv1 = (idv2/13)*13+v1; //id (in dbase) of the first view to use
-		// std::cout<<"obj "<<idv2/8<<" v1 : " <<v1<<", v2 : " <<v2<<std::endl;
+		int idv1 = id_obj*8+v1; //id (in dbase) of the first view to use
+		// std::cout<<"obj "<<id_obj<<" v1 : " <<v1<<", v2 : " <<v2<<std::endl;
 		// std::cout<<" idv1 : " <<idv1<<", idv2 : " <<idv2<<std::endl;
 		
 		Blob<Dtype>* input_layer = pred_net_.input_blobs()[0];
 		int data_dim = top[0]->count() / top[0]->shape(0);
 		caffe_copy(data_dim,
-				   &hdf_blobs_[0]->cpu_data()[idv1 * data_dim],
+				   &data_single_->cpu_data()[idv1 * data_dim],
 				   input_layer->mutable_cpu_data());
 		pred_net_.Forward();
 
-		// cv::Mat im1 = cv::Mat(256,256,CV_32FC1,&hdf_blobs_[0]->mutable_cpu_data()[idv1 * data_dim]);
+		// cv::Mat im1 = cv::Mat(256,256,CV_32FC1,&data_single_->mutable_cpu_data()[idv1 * data_dim]);
 		// cv::namedWindow( "sk1", CV_WINDOW_NORMAL );
 		// cv::imshow("sk1",im1);
 		// cv::Mat im2 = cv::Mat(256,256,CV_32FC1, &hdf_blobs_[0]->mutable_cpu_data()[idv2 * data_dim]);
 		// cv::namedWindow( "sk2", CV_WINDOW_NORMAL );
 		// cv::imshow("sk2",im2);
-		// cv::waitKey();
+		//cv::waitKey();
 
 		//WARNING rotate pred and put it in network
 		data_dim = top[last_blob]->count() / top[last_blob]->shape(0);
@@ -239,8 +246,8 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 		
 		rotate_blobs(pred_net_.output_blobs()[0],
 					 //top[last_blob],
-					 &viewpoint_->cpu_data()[idv1 * 16],
-					 &view_mat_->cpu_data()[idv1 * 16],
+					 &viewpoint_->cpu_data()[(id_obj*13+v1) * 16],
+					 &view_mat_single_->cpu_data()[idv1 * 16],
 					 &viewpoint_->cpu_data()[idv2 * 16],
 					 &view_mat_->cpu_data()[idv2 * 16],
 					 &proj_mat_->cpu_data()[idv1 * 16],

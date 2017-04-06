@@ -186,6 +186,10 @@ float val_depth= vox[c](i,j);
 		Eigen::Map<const Eigen::Matrix<Dtype,4,4> > proj(proj_mat);
 		Eigen::Map<const Eigen::Matrix<Dtype,4,4> > mv1(model1);
 		Eigen::Map<const Eigen::Matrix<Dtype,4,4> > mv2(model2);
+		// std::cout<<view1<<std::endl<<std::endl;
+		// std::cout<<view2<<std::endl<<std::endl;
+		// std::cout<<mv1<<std::endl<<std::endl;
+		// std::cout<<mv2<<std::endl<<std::endl;
 		//compute model
 		// Eigen::Matrix<Dtype,4,4> model;
 		// model = new_view*model_old.inverse();

@@ -58,6 +58,8 @@ class HDF5DataPredLayer : public Layer<Dtype> {
 	shared_ptr<Blob<Dtype> > viewpoint_;
 	shared_ptr<Blob<Dtype> > view_mat_;
 	shared_ptr<Blob<Dtype> > proj_mat_;
+	shared_ptr<Blob<Dtype> > view_mat_single_;
+	shared_ptr<Blob<Dtype> > data_single_;
 	std::default_random_engine generator_;
 	std::uniform_int_distribution<int> distribution_2nd_view;
 	std::uniform_real_distribution<float> distribution_gt;
