@@ -40,7 +40,7 @@ template <typename Dtype>
 		int grid_rows = size/dim;
 		int grid_cols=dim/grid_rows/4;
 		vox = unpack_pred_in_image<Dtype>(vox_cv,grid_rows,grid_cols);
-		// LOG(INFO) << "grid of size "  << vox.size() << "," << vox[0].rows() << "," << vox[0].cols() ;
+		LOG(INFO) << "grid of size "  << vox.size() << "," << vox[0].rows() << "," << vox[0].cols() ;
 		
 	}
 

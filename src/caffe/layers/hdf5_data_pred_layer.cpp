@@ -41,9 +41,10 @@ void HDF5DataPredLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   const int MAX_DATA_DIM = INT_MAX;
 
   for (int i = 0; i < top_size; ++i) {
+	DLOG(INFO) << "Loading dataset  " << this->layer_param_.top(i).c_str();
     hdf_blobs_[i] = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
     hdf5_load_nd_dataset(file_id, this->layer_param_.top(i).c_str(),
-        MIN_DATA_DIM, MAX_DATA_DIM, hdf_blobs_[i].get());
+						 MIN_DATA_DIM, MAX_DATA_DIM, hdf_blobs_[i].get(),true);
   }
 
   //WARNING load data for rotation
@@ -51,18 +52,18 @@ void HDF5DataPredLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   view_mat_ = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
   proj_mat_ = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
   hdf5_load_nd_dataset(file_id, "viewpoint",
-        MIN_DATA_DIM, MAX_DATA_DIM, viewpoint_.get());
+        MIN_DATA_DIM, MAX_DATA_DIM, viewpoint_.get(),true);
   hdf5_load_nd_dataset(file_id, "view_mat",
-        MIN_DATA_DIM, MAX_DATA_DIM, view_mat_.get());
+        MIN_DATA_DIM, MAX_DATA_DIM, view_mat_.get(),true);
   hdf5_load_nd_dataset(file_id, "proj_mat",
-        MIN_DATA_DIM, MAX_DATA_DIM, proj_mat_.get());
+        MIN_DATA_DIM, MAX_DATA_DIM, proj_mat_.get(),true);
   //WARNING load data single view
   data_single_ = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
   view_mat_single_ = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
   hdf5_load_nd_dataset(file_id, "data_single",
-        MIN_DATA_DIM, MAX_DATA_DIM, data_single_.get());
+        MIN_DATA_DIM, MAX_DATA_DIM, data_single_.get(),true);
   hdf5_load_nd_dataset(file_id, "view_mat_single",
-        MIN_DATA_DIM, MAX_DATA_DIM, view_mat_single_.get());
+        MIN_DATA_DIM, MAX_DATA_DIM, view_mat_single_.get(),true);
 
   herr_t status = H5Fclose(file_id);
   CHECK_GE(status, 0) << "Failed to close HDF5 file: " << filename;
