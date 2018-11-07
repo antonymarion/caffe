@@ -308,7 +308,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 150 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 151 (last added: recurrent_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -407,6 +407,7 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional VoxelsDataParameter voxels_data_param = 149;
+  optional DepthDataParameter depth_data_param = 150;
   optional WindowDataParameter window_data_param = 129;
 }
 
@@ -844,6 +845,23 @@ message VoxelsDataParameter {
   optional string root_folder = 4 [default = ""];
   optional uint32 img_size = 8 [default = 256];
   optional uint32 voxels_size = 9 [default = 64];
+  // It will also resize images if new_height or new_width are not zero.
+  optional uint32 new_height = 5 [default = 0];
+  optional uint32 new_width = 6 [default = 0];
+  // Specify if the images are color or gray
+  optional bool is_color = 7 [default = true];
+}
+
+message DepthDataParameter {
+  // Specify the data source.
+  optional string source = 1;
+  // Specify the batch size.
+  optional uint32 batch_size = 2 [default = 1];
+  // Whether or not ImageLayer should shuffle the list of files at every epoch.
+  optional bool shuffle = 3 [default = false];
+  optional string root_folder = 4 [default = ""];
+  optional uint32 img_size = 8 [default = 256];
+  //optional uint32 voxels_size = 9 [default = 64];
   // It will also resize images if new_height or new_width are not zero.
   optional uint32 new_height = 5 [default = 0];
   optional uint32 new_width = 6 [default = 0];
