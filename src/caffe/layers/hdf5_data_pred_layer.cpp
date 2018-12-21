@@ -17,8 +17,11 @@ TODO:
 #include "caffe/layers/hdf5_data_pred_layer.hpp"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/prediction.hpp"
-#include <cv.h>
-#include <highgui.h>
+
+#include <opencv2/core/core.hpp>
+
+//#include <cv.h>
+//#include <highgui.h>
 
 namespace caffe {
 
