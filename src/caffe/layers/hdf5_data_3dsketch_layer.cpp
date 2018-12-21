@@ -185,7 +185,7 @@ void HDF5Data3DSketchLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& botto
 
 	//choose number of other views
 	int nviews = distribution_n_views(generator_);
-	std::cout<<"nviews " <<nviews<<std::endl;
+	//std::cout<<"nviews " <<nviews<<std::endl;
 	int id_blob = 0;
 	//WARNING retrieve id_view (%8 ?) and choose first view (random puis /8 + idv1)
 	int idv1 = data_permutation_[current_row_];
@@ -213,8 +213,8 @@ void HDF5Data3DSketchLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& botto
 			insertion = views.insert(v2);
 		}
 		int idv2 = id_obj*13+v2; //id (in dbase) of the first view to use
-		std::cout<<"obj "<<id_obj<<" v1 : " <<v1<<", v2 : " <<v2<<std::endl;
-		std::cout<<" idv1 : " <<idv1<<", idv2 : " <<idv2<<std::endl;
+		//std::cout<<"obj "<<id_obj<<" v1 : " <<v1<<", v2 : " <<v2<<std::endl;
+		//std::cout<<" idv1 : " <<idv1<<", idv2 : " <<idv2<<std::endl;
 		
 		//WARNING aggreagate values
 		caffe_add(data_dim,
