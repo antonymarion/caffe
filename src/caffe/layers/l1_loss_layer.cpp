@@ -23,41 +23,27 @@ void L1LossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       bottom[0]->cpu_data(),
       bottom[1]->cpu_data(),
       diff_.mutable_cpu_data());
-  const Dtype* temp = diff_.cpu_data();
-  Dtype loss = 0.0;
-  for(int i = 0; i < count; ++i) {
-    loss += fabs(temp[i]);
-  }
-  //std::cout << loss << std::endl;
-  loss = loss / bottom[0]->num();
+  Dtype asum = caffe_cpu_asum(count, diff_.cpu_data());
+  Dtype loss = asum / bottom[0]->num();
+  //Dtype loss = asum / bottom[0]->count();
   top[0]->mutable_cpu_data()[0] = loss;
 }
 
 template <typename Dtype>
 void L1LossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  Dtype eps = 1e-5;
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0] / bottom[i]->num();
-      const Dtype *temp = diff_.cpu_data();
-      Dtype *grad = bottom[i]->mutable_cpu_diff();
-
-      for (int n = 0; n < bottom[i]->count(); ++n){
-        grad[n] = alpha*((temp[n] >=0 ) ? 1 : -1);
-        if(temp[n] == 0)
-          grad[n] = 0;
-      }
-    //   caffe_cpu_axpby(
-    //       bottom[i]->count(),              // count
-    //       alpha,                              // alpha
-    //       diff_.cpu_data(),                   // a
-    //       Dtype(0),                           // beta
-    //       grad);  // b
-    // }
-    // for (int n = 0; n < bottom[i]->count; ++i) {
-    //     grad[n] = grad[n] / (fabs(temp[n]) + eps);
+      //const Dtype alpha = sign * top[0]->cpu_diff()[0] / bottom[i]->count();
+      caffe_cpu_sign(bottom[i]->count(), diff_.cpu_data(),
+      		     bottom[i]->mutable_cpu_diff());
+      caffe_cpu_scale(
+          bottom[i]->count(),              // count
+          alpha,                              // alpha
+          bottom[i]->cpu_diff(),              // x
+          bottom[i]->mutable_cpu_diff());  // y
     }
   }
 }
