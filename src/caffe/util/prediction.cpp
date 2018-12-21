@@ -2,8 +2,11 @@
 
 #include <vector>
 #include <Eigen/Core>
-#include <cv.h>
-#include <highgui.h>
+
+#include <opencv2/core/core.hpp>
+
+// #include <cv.h>
+// #include <highgui.h>
 
 namespace caffe {
 	

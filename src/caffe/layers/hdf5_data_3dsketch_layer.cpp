@@ -9,12 +9,13 @@ TODO:
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 #include "hdf5.h"
 #include "hdf5_hl.h"
 #include "stdint.h"
 
-#include "caffe/layers/hdf5_data_pred_layer.hpp"
+#include "caffe/layers/hdf5_data_3dsketch_layer.hpp"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/prediction.hpp"
 
@@ -26,23 +27,24 @@ TODO:
 namespace caffe {
 
 template <typename Dtype>
-HDF5DataPredLayer<Dtype>::~HDF5DataPredLayer<Dtype>() { }
+HDF5Data3DSketchLayer<Dtype>::~HDF5Data3DSketchLayer<Dtype>() { }
 
 // Load data and label from HDF5 filename into the class property blobs.
 template <typename Dtype>
-void HDF5DataPredLayer<Dtype>::LoadHDF5FileData(const char* filename) {
+void HDF5Data3DSketchLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   DLOG(INFO) << "Loading HDF5 file: " << filename;
   hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) {
     LOG(FATAL) << "Failed opening HDF5 file: " << filename;
   }
 
-  int top_size = this->layer_param_.top_size()-1; //WARNING change -1 
+  int top_size = this->layer_param_.top_size(); //WARNING change -1 
   hdf_blobs_.resize(top_size);
 
   const int MIN_DATA_DIM = 1;
   const int MAX_DATA_DIM = INT_MAX;
 
+  //load single view sketch and voxel gt
   for (int i = 0; i < top_size; ++i) {
 	DLOG(INFO) << "Loading dataset  " << this->layer_param_.top(i).c_str();
     hdf_blobs_[i] = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
@@ -50,23 +52,13 @@ void HDF5DataPredLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 						 MIN_DATA_DIM, MAX_DATA_DIM, hdf_blobs_[i].get(),true);
   }
 
+
   //WARNING load data for rotation
-  viewpoint_ = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
-  view_mat_ = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
-  proj_mat_ = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
-  hdf5_load_nd_dataset(file_id, "viewpoint",
-        MIN_DATA_DIM, MAX_DATA_DIM, viewpoint_.get(),true);
-  hdf5_load_nd_dataset(file_id, "view_mat",
-        MIN_DATA_DIM, MAX_DATA_DIM, view_mat_.get(),true);
-  hdf5_load_nd_dataset(file_id, "proj_mat",
-        MIN_DATA_DIM, MAX_DATA_DIM, proj_mat_.get(),true);
-  //WARNING load data single view
-  data_single_ = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
-  view_mat_single_ = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
-  hdf5_load_nd_dataset(file_id, "data_single",
-        MIN_DATA_DIM, MAX_DATA_DIM, data_single_.get(),true);
-  hdf5_load_nd_dataset(file_id, "view_mat_single",
-        MIN_DATA_DIM, MAX_DATA_DIM, view_mat_single_.get(),true);
+  data_update_ = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
+  hdf5_load_nd_dataset(file_id, "sketch3D_update",
+        MIN_DATA_DIM, MAX_DATA_DIM, data_update_.get(),true);
+
+
 
   herr_t status = H5Fclose(file_id);
   CHECK_GE(status, 0) << "Failed to close HDF5 file: " << filename;
@@ -84,7 +76,7 @@ void HDF5DataPredLayer<Dtype>::LoadHDF5FileData(const char* filename) {
     data_permutation_[i] = i;
 
   // Shuffle if needed.
-  if (this->layer_param_.hdf5_data_pred_param().shuffle()) {
+  if (this->layer_param_.hdf5_data_3dsketch_param().shuffle()) {
     std::random_shuffle(data_permutation_.begin(), data_permutation_.end());
     DLOG(INFO) << "Successully loaded " << hdf_blobs_[0]->shape(0)
                << " rows (shuffled)";
@@ -94,13 +86,13 @@ void HDF5DataPredLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 }
 
 template <typename Dtype>
-void HDF5DataPredLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void HDF5Data3DSketchLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // Refuse transformation parameters since HDF5 is totally generic.
   CHECK(!this->layer_param_.has_transform_param()) <<
       this->type() << " does not transform data.";
   // Read the source to parse the filenames.
-  const string& source = this->layer_param_.hdf5_data_pred_param().source();
+  const string& source = this->layer_param_.hdf5_data_3dsketch_param().source();
   LOG(INFO) << "Loading list of HDF5 filenames from: " << source;
   hdf_filenames_.clear();
   std::ifstream source_file(source.c_str());
@@ -127,7 +119,7 @@ void HDF5DataPredLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 
   // Shuffle if needed.
-  if (this->layer_param_.hdf5_data_pred_param().shuffle()) {
+  if (this->layer_param_.hdf5_data_3dsketch_param().shuffle()) {
     std::random_shuffle(file_permutation_.begin(), file_permutation_.end());
   }
 
@@ -136,8 +128,8 @@ void HDF5DataPredLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   current_row_ = 0;
 
   // Reshape blobs.
-  const int batch_size = this->layer_param_.hdf5_data_pred_param().batch_size();
-  const int top_size = this->layer_param_.top_size()-1; //WARNING -1 to avoid last blob
+  const int batch_size = this->layer_param_.hdf5_data_3dsketch_param().batch_size();
+  const int top_size = this->layer_param_.top_size(); //WARNING -1 to avoid last blob
   vector<int> top_shape;
   for (int i = 0; i < top_size; ++i) {
 	  top_shape.resize(hdf_blobs_[i]->num_axes());
@@ -147,25 +139,14 @@ void HDF5DataPredLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     top[i]->Reshape(top_shape);
   }
-  //WARNING set last blob, which is the prediction.
-  //Same size as the gt (considered to be in top_size -1 pos)
-  top_shape.resize(hdf_blobs_[top_size-1]->num_axes());
-  top_shape[0] = batch_size;
-  for (int j = 1; j < top_shape.size(); ++j) {
-      top_shape[j] = hdf_blobs_[top_size-1]->shape(j);
-  }
-  top[top_size]->Reshape(top_shape);
- 
-  //WARNING init prediction net
-  pred_net_.CopyTrainedLayersFrom(this->layer_param_.hdf5_data_pred_param().trained_file());
 
 }
 #define mod(a,b) ((a)<0?(a)+(b):(a)%(b))
 
 template <typename Dtype>
-void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void HDF5Data3DSketchLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  const int batch_size = this->layer_param_.hdf5_data_pred_param().batch_size();
+  const int batch_size = this->layer_param_.hdf5_data_3dsketch_param().batch_size();
   //parcours images du batch
   for (int i = 0; i < batch_size; ++i, ++current_row_) {
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
@@ -176,7 +157,7 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         if (current_file_ == num_files_) {
 			//si dernier fichier, revenir a 0 et shuffle
           current_file_ = 0;
-          if (this->layer_param_.hdf5_data_pred_param().shuffle()) {
+          if (this->layer_param_.hdf5_data_3dsketch_param().shuffle()) {
             std::random_shuffle(file_permutation_.begin(),
                                 file_permutation_.end());
           }
@@ -188,81 +169,72 @@ void HDF5DataPredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       }
 	  //shuffle sur les lignes
       current_row_ = 0;
-      if (this->layer_param_.hdf5_data_pred_param().shuffle())
+      if (this->layer_param_.hdf5_data_3dsketch_param().shuffle())
         std::random_shuffle(data_permutation_.begin(), data_permutation_.end());
     }
-	//donner donnees
-    for (int j = 0; j < this->layer_param_.top_size()-1; ++j) { //WARNING -1 to avoid last blob (pred)
+
+	//LOG(INFO) << "copy voxel_64";
+
+	//donner donnees (sauf premier blob : combine sketches)
+    for (int j = 1; j < this->layer_param_.top_size(); ++j) { //WARNING 1 to avoid first blob
       int data_dim = top[j]->count() / top[j]->shape(0);
       caffe_copy(data_dim,
           &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
             * data_dim], &top[j]->mutable_cpu_data()[i * data_dim]);
     }
 
-	//choose gt or pred
-	int last_blob = this->layer_param_.top_size()-1;
-	float choice = distribution_gt(generator_);
-	if(choice<this->layer_param_.hdf5_data_pred_param().gt_prop())
+	//choose number of other views
+	int nviews = distribution_n_views(generator_);
+	std::cout<<"nviews " <<nviews<<std::endl;
+	int id_blob = 0;
+	//WARNING retrieve id_view (%8 ?) and choose first view (random puis /8 + idv1)
+	int idv1 = data_permutation_[current_row_];
+	int v1 = idv1%8;
+	int id_obj = idv1/8;
+	std::unordered_set<int> views;
+	views.insert(v1);
+	
+	int data_dim = top[id_blob]->count() / top[id_blob]->shape(0);
+	Dtype * top_data = &top[id_blob]->mutable_cpu_data()[i * data_dim];
+	shared_ptr<Blob<Dtype> > aggreg_sketches;
+	//LOG(INFO) << "copy initial 3dsketch";
+	caffe_copy(data_dim,
+				&hdf_blobs_[id_blob]->cpu_data()[idv1  * data_dim],
+				top_data);
+		   
+	for(int n = 1; n < nviews; n++)
 	{
-		//take GT
-		//WARNING faire prediction
-	  //std::cout<<"taking GT"<<std::endl;
-	  int data_dim = top[last_blob]->count() / top[last_blob]->shape(0);
-	  caffe_copy(data_dim,
-		     &hdf_blobs_[last_blob-1]->cpu_data()[data_permutation_[current_row_]  * data_dim],
-		     &top[last_blob]->mutable_cpu_data()[i * data_dim]);
-
-	} else
-	{
-		//WARNING retrieve id_view (%8 ?) and choose first view (random puis /8 + idv1)
-		int idv2 = data_permutation_[current_row_];
-		int v2 = idv2 % 13;
-		int id_obj = idv2/13;
-		//choose 1st view in the 8 first ones
-		int v1 = distribution_2nd_view(generator_);
-		while(v1==v2)
-			v1 = distribution_2nd_view(generator_);
-		int idv1 = id_obj*8+v1; //id (in dbase) of the first view to use
-		// std::cout<<"obj "<<id_obj<<" v1 : " <<v1<<", v2 : " <<v2<<std::endl;
-		// std::cout<<" idv1 : " <<idv1<<", idv2 : " <<idv2<<std::endl;
+		//choose other views in the 13 update ones
+		int v2 = distribution_2nd_view(generator_);
+		auto insertion = views.insert(v2);
+		while(!(insertion.second))
+		{
+			v2 = distribution_2nd_view(generator_);
+			insertion = views.insert(v2);
+		}
+		int idv2 = id_obj*13+v2; //id (in dbase) of the first view to use
+		std::cout<<"obj "<<id_obj<<" v1 : " <<v1<<", v2 : " <<v2<<std::endl;
+		std::cout<<" idv1 : " <<idv1<<", idv2 : " <<idv2<<std::endl;
 		
-		Blob<Dtype>* input_layer = pred_net_.input_blobs()[0];
-		int data_dim = top[0]->count() / top[0]->shape(0);
-		caffe_copy(data_dim,
-				   &data_single_->cpu_data()[idv1 * data_dim],
-				   input_layer->mutable_cpu_data());
-		pred_net_.Forward();
-
-		// cv::Mat im1 = cv::Mat(256,256,CV_32FC1,&data_single_->mutable_cpu_data()[idv1 * data_dim]);
-		// cv::namedWindow( "sk1", CV_WINDOW_NORMAL );
-		// cv::imshow("sk1",im1);
-		// cv::Mat im2 = cv::Mat(256,256,CV_32FC1, &hdf_blobs_[0]->mutable_cpu_data()[idv2 * data_dim]);
-		// cv::namedWindow( "sk2", CV_WINDOW_NORMAL );
-		// cv::imshow("sk2",im2);
-		//cv::waitKey();
-
-		//WARNING rotate pred and put it in network
-		data_dim = top[last_blob]->count() / top[last_blob]->shape(0);
+		//WARNING aggreagate values
+		caffe_add(data_dim,
+				  top_data,
+				  &data_update_->cpu_data()[idv2  * data_dim],
+				  top_data);
 		
-		// caffe_copy(data_dim,
-		// 		   &hdf_blobs_[last_blob-1]->cpu_data()[idv1  * data_dim],
-		// 		   top[last_blob]->mutable_cpu_data());
-		
-		rotate_blobs(pred_net_.output_blobs()[0],
-					 //top[last_blob],
-					 &viewpoint_->cpu_data()[(id_obj*13+v1) * 16],
-					 &view_mat_single_->cpu_data()[idv1 * 16],
-					 &viewpoint_->cpu_data()[idv2 * 16],
-					 &view_mat_->cpu_data()[idv2 * 16],
-					 &proj_mat_->cpu_data()[idv1 * 16],
-					 &top[last_blob]->mutable_cpu_data()[i * data_dim]);
 	}
-
+	if(nviews > 1)
+		caffe_scal<Dtype>(data_dim,
+				   1.0/(nviews),
+				   top_data);
+	// caffe_copy(data_dim,
+	// 		   aggreg_sketches->cpu_data(),
+	// 		   &top[id_blob]->mutable_cpu_data()[i * data_dim]);
   }
 }
 
 
-INSTANTIATE_CLASS(HDF5DataPredLayer);
-REGISTER_LAYER_CLASS(HDF5DataPred);
+INSTANTIATE_CLASS(HDF5Data3DSketchLayer);
+REGISTER_LAYER_CLASS(HDF5Data3DSketch);
 
 }  // namespace caffe

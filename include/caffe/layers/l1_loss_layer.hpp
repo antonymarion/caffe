@@ -12,9 +12,9 @@
 namespace caffe {
 
 /**
- * @brief Computes the Euclidean (L2) loss @f$
- *          E = \frac{1}{2N} \sum\limits_{n=1}^N \left| \left| \hat{y}_n - y_n
- *        \right| \right|_2^2 @f$ for real-valued regression tasks.
+ * @brief Computes the L1 loss @f$
+ *          E = \frac{1}{N} \sum\limits_{n=1}^N \left| \hat{y}_n - y_n
+ *        \right| @f$ for real-valued regression tasks.
  *
  * @param bottom input Blob vector (length 2)
  *   -# @f$ (N \times C \times H \times W) @f$
@@ -23,19 +23,9 @@ namespace caffe {
  *      the targets @f$ y \in [-\infty, +\infty]@f$
  * @param top output Blob vector (length 1)
  *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
- *      the computed Euclidean loss: @f$ E =
- *          \frac{1}{2n} \sum\limits_{n=1}^N \left| \left| \hat{y}_n - y_n
- *        \right| \right|_2^2 @f$
- *
- * This can be used for least-squares regression tasks.  An InnerProductLayer
- * input to a EuclideanLossLayer exactly formulates a linear least squares
- * regression problem. With non-zero weight decay the problem becomes one of
- * ridge regression -- see src/caffe/test/test_sgd_solver.cpp for a concrete
- * example wherein we check that the gradients computed for a Net with exactly
- * this structure match hand-computed gradient formulas for ridge regression.
- *
- * (Note: Caffe, and SGD in general, is certainly \b not the best way to solve
- * linear least squares problems! We use it only as an instructive example.)
+ *      the computed L1 loss: @f$ E =
+ *          \frac{1}{2n} \sum\limits_{n=1}^N \left| \hat{y}_n - y_n
+ *        \right| @f$
  */
 template <typename Dtype>
 class L1LossLayer : public LossLayer<Dtype> {
@@ -62,9 +52,9 @@ class L1LossLayer : public LossLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   /**
-   * @brief Computes the Euclidean error gradient w.r.t. the inputs.
+   * @brief Computes the L1 error gradient w.r.t. the inputs.
    *
-   * Unlike other children of LossLayer, EuclideanLossLayer \b can compute
+   * Unlike other children of LossLayer, L1LossLayer \b can compute
    * gradients with respect to the label inputs bottom[1] (but still only will
    * if propagate_down[1] is set, due to being produced by learnable parameters
    * or if force_backward is set). In fact, this layer is "commutative" -- the
@@ -86,12 +76,12 @@ class L1LossLayer : public LossLayer<Dtype> {
    *      the predictions @f$\hat{y}@f$; Backward fills their diff with
    *      gradients @f$
    *        \frac{\partial E}{\partial \hat{y}} =
-   *            \frac{1}{n} \sum\limits_{n=1}^N (\hat{y}_n - y_n)
+   *            \frac{1}{N} \sum\limits_{n=1}^N sign(\hat{y}_n - y_n)
    *      @f$ if propagate_down[0]
    *   -# @f$ (N \times C \times H \times W) @f$
    *      the targets @f$y@f$; Backward fills their diff with gradients
    *      @f$ \frac{\partial E}{\partial y} =
-   *          \frac{1}{n} \sum\limits_{n=1}^N (y_n - \hat{y}_n)
+   *          \frac{1}{N} \sum\limits_{n=1}^N sign(y_n - \hat{y}_n)
    *      @f$ if propagate_down[1]
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
@@ -104,4 +94,4 @@ class L1LossLayer : public LossLayer<Dtype> {
 
 }  // namespace caffe
 
-#endif  // CAFFE_EUCLIDEAN_LOSS_LAYER_HPP_
+#endif  // CAFFE_L1_LOSS_LAYER_HPP_
