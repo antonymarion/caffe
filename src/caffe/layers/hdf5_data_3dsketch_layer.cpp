@@ -217,16 +217,21 @@ void HDF5Data3DSketchLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& botto
 		//std::cout<<" idv1 : " <<idv1<<", idv2 : " <<idv2<<std::endl;
 		
 		//WARNING aggreagate values
-		caffe_add(data_dim,
-				  top_data,
-				  &data_update_->cpu_data()[idv2  * data_dim],
-				  top_data);
+		// caffe_add(data_dim,
+		// 		  top_data,
+		// 		  &data_update_->cpu_data()[idv2  * data_dim],
+		// 		  top_data);
+
+		Dtype * new_view_ptr = &data_update_->cpu_data()[idv2  * data_dim];
+		for (int idx = 0; idx < data_dim; ++idx) {
+			top_data[idx] = std::max(new_view_ptr[idx],top_data[idx]);
+		}
 		
 	}
-	if(nviews > 1)
-		caffe_scal<Dtype>(data_dim,
-				   1.0/(nviews),
-				   top_data);
+	// if(nviews > 1)
+	// 	caffe_scal<Dtype>(data_dim,
+	// 			   1.0/(nviews),
+	// 			   top_data);
 	// caffe_copy(data_dim,
 	// 		   aggreg_sketches->cpu_data(),
 	// 		   &top[id_blob]->mutable_cpu_data()[i * data_dim]);
