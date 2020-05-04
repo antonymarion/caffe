@@ -222,7 +222,7 @@ void HDF5Data3DSketchLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& botto
 		// 		  &data_update_->cpu_data()[idv2  * data_dim],
 		// 		  top_data);
 
-		Dtype * new_view_ptr = &data_update_->cpu_data()[idv2  * data_dim];
+		const Dtype * new_view_ptr = &data_update_->cpu_data()[idv2  * data_dim];
 		for (int idx = 0; idx < data_dim; ++idx) {
 			top_data[idx] = std::max(new_view_ptr[idx],top_data[idx]);
 		}
